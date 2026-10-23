@@ -1,0 +1,448 @@
+{
+  "name": "DocumentIntelligencePipeline-V2",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1792,
+        -464
+      ],
+      "id": "93579a14-1b85-45e8-a8fe-e8c7d39644d1",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "Upload File to PDF.co",
+        "binaryData": true,
+        "name": "= {{ $json.name }}"
+      },
+      "type": "n8n-nodes-pdfco.PDFco Api",
+      "typeVersion": 1.1,
+      "position": [
+        -1120,
+        -464
+      ],
+      "id": "cd6f96bc-c405-4f5d-b69b-46a439f45385",
+      "name": "PDFco API1",
+      "credentials": {
+        "pdfcoApi": {
+          "id": "YOUR_PDFCO_API_CREDENTIAL",
+          "name": "YOUR_PDFCO_API_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "Convert from PDF",
+        "url": "={{ $json.url }}",
+        "advancedOptions": {
+          "inline": false
+        }
+      },
+      "type": "n8n-nodes-pdfco.PDFco Api",
+      "typeVersion": 1.1,
+      "position": [
+        -896,
+        -464
+      ],
+      "id": "cecca3bd-19a9-44b5-8f34-22505996052c",
+      "name": "PDFco API",
+      "credentials": {
+        "pdfcoApi": {
+          "id": "YOUR_PDFCO_API_CREDENTIAL",
+          "name": "YOUR_PDFCO_API_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -672,
+        -464
+      ],
+      "id": "5617aeda-d387-48a6-913a-5e611ec11df3",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        -464
+      ],
+      "id": "9514d6f3-c217-4b30-a801-8c94b29ad16f",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following business document and create a structured business brief.\n\nExtract only information supported by the document.\nDo not invent or guess.\n\nIdentify:\n- Document type\n- Parties involved\n- Contract value or financial amount\n- Start/effective date\n- End date, if applicable\n- Renewal terms\n- Notice period\n- Key obligations\n- Important dates or deadlines\n- Potential risks or concerns\n- Actions required by Northstar Office Supplies Ltd.\n- Questions for human review\n\nIf information is not present, write \"Not specified\".\n\nDOCUMENT:\n\n{{ $json.data }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -224,
+        -464
+      ],
+      "id": "14c88c3d-d37a-4efc-990a-b7148d713848",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        -240
+      ],
+      "id": "3d9869c4-2958-40f4-bca5-fff06af24650",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL",
+          "name": "YOUR_GEMINI_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"document_type\": \"Supplier Service Agreement\",\n  \"parties\": [\n    \"BrightDesk Facilities GmbH\",\n    \"Northstar Office Supplies Ltd.\"\n  ],\n  \"contract_value\": \"€8,400 per year\",\n  \"start_date\": \"November 1, 2024\",\n  \"end_date\": \"Not specified\",\n  \"renewal_terms\": \"Not specified\",\n  \"notice_period\": \"Not specified\",\n  \"key_obligations\": [\n    \"Not specified\"\n  ],\n  \"important_dates\": [\n    \"Not specified\"\n  ],\n  \"potential_concerns\": [\n    \"Not specified\"\n  ],\n  \"action_required\": [\n    \"Not specified\"\n  ],\n  \"questions_for_human_review\": [\n    \"Not specified\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -96,
+        -240
+      ],
+      "id": "09fa4f58-49c5-4f16-b322-ed6e6eec9dbb",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "sendTo": "<YOUR_TARGET_INBOX@example.com>",
+        "subject": "=Northstar Document Review - {{ $json.output.number_of_documents }} Documents",
+        "message": "=<h2>📊 Northstar Document Review</h2>\n\n<h3>Number of Documents:</h3>\n<p>{{ $json.output.number_of_documents }}</p>\n\n<h3>Types of Documents:</h3>\n<p>• {{ $json.output.types_of_documents.join(\"<br>• \") }}</p>\n\n<hr>\n\n<h3>Brief Summary:</h3>\n<p>{{ $json.output.brief_summary }}</p>\n\n<hr>\n\n<h3>⚠️ Those That Need Human Attention:</h3>\n<p>• {{ $json.output.human_attention.join(\"<br>• \") }}</p>\n\n<hr>\n\n<p><em>This summary was automatically generated by the Northstar AI document workflow.</em></p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        -464
+      ],
+      "id": "98642c21-7d94-426f-8b8f-cc0d34d43ae6",
+      "name": "Send a message",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GMAIL_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "*",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "<YOUR_GOOGLE_DRIVE_FOLDER_ID>",
+            "mode": "list",
+            "cachedResultName": "<YOUR_DRIVE_FOLDER_NAME>",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/<YOUR_GOOGLE_DRIVE_FOLDER_ID>"
+          },
+          "whatToSearch": "files"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1568,
+        -464
+      ],
+      "id": "04b8b44a-98b4-4409-8883-c46010f27586",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GOOGLE_DRIVE_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1344,
+        -464
+      ],
+      "id": "2e45ea2d-5cba-4484-ba8c-ca6bc7386bb5",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GOOGLE_DRIVE_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "documents",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -464
+      ],
+      "id": "a5ba5701-00e8-4de7-94bb-07425b3db1ed",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Review the individual business document analyses provided below and create ONE concise management summary for Northstar Office Supplies Ltd.\n\nDo not analyze the original documents again.\nUse only the information contained in the individual analyses.\nDo not invent or guess information.\n\nYour summary must contain exactly these four sections:\n\nNumber of Documents:\nState the total number of documents analyzed.\n\nTypes of Documents:\nList the different types of documents identified. If multiple documents have the same type, do not unnecessarily repeat the type.\n\nBrief Summary:\nProvide a concise overall summary of what the documents are about and the most important business points for Northstar Office Supplies Ltd.\n\nThose That Need Human Attention:\nList only documents or issues that require human review, a decision, an action, or attention due to deadlines, renewals, financial commitments, contractual concerns, risks, or other important matters.\nIf nothing requires human attention, write \"None identified.\"\n\nINDIVIDUAL DOCUMENT ANALYSES:\n\n{{ JSON.stringify($json.documents) }}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        352,
+        -464
+      ],
+      "id": "22857e38-eadf-4327-a28b-1d0f1a6e0bb9",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        -240
+      ],
+      "id": "db469e34-69e5-4d65-aaa4-d93b443987c4",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL",
+          "name": "YOUR_GEMINI_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"number_of_documents\": 5,\n  \"types_of_documents\": [\n    \"Marketing Services Agreement\",\n    \"Commercial Office Lease Summary Agreement\",\n    \"Managed Print & Equipment Maintenance Agreement\",\n    \"Master Software Subscription Agreement\",\n    \"Supplier Service Agreement\"\n  ],\n  \"brief_summary\": \"Concise overall summary of the documents.\",\n  \"human_attention\": [\n    \"Items requiring human review or action.\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        496,
+        -240
+      ],
+      "id": "fd8a67eb-615b-4894-980a-1e1812362d29",
+      "name": "Structured Output Parser1"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDFco API1": {
+      "main": [
+        [
+          {
+            "node": "PDFco API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDFco API": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "PDFco API1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

@@ -1,0 +1,25 @@
+flowchart LR
+    subgraph V2[V2: Multi-doc + Gemini]
+        V2A[Drive] --> V2B[PDF.co]
+        V2B --> V2C[Extract]
+        V2C --> V2D[LLM #1 per doc]
+        V2D --> V2E[Aggregate]
+        V2E --> V2F[LLM #2 management summary]
+    end
+
+    subgraph V3[V3: + Review Decision]
+        V3A[V2 chain] --> V3B[LLM now also decides review_status]
+        V3B --> V3C{If node<br/>human_review_required?}
+        V3C -- yes --> V3D[Set: HUMAN REVIEW REQUIRED]
+        V3C -- no --> V3E[Set: NO REVIEW]
+        V3D & V3E --> V3F[Merge + Loop]
+    end
+
+    subgraph V4[V4: Narrow AI + Deterministic Code]
+        V4A[V3 chain] --> V4B[LLM returns ONLY YES/NO]
+        V4B --> V4C[Set: human_review_required]
+        V4C --> V4D[Aggregate fields only]
+        V4D --> V4E[Code node: build final summary]
+    end
+
+    V2 --> V3 --> V4

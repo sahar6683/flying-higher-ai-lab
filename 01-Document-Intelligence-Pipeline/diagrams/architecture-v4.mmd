@@ -1,0 +1,18 @@
+flowchart TD
+    A([Manual trigger]) --> B[Google Drive: Search files<br/>*.pdf in NorthstarPDFs]
+    B --> C[Loop Over Items]
+    C --> D[Google Drive: Download file]
+    D --> E[PDF.co: Upload to PDF.co]
+    E --> F[PDF.co: Convert PDF → text]
+    F --> G[HTTP Request: fetch text]
+    G --> H[Extract from File]
+    H --> I[Prepare AI Input<br/>Set node: doc_name + doc_text]
+    I --> J[Basic LLM Chain<br/>prompt = YES/NO criteria]
+    J --> K[OpenRouter Chat Model<br/>deepseek/deepseek-v4-flash-0731<br/>temperature = 0, maxTokens = 500]
+    K --> L[Prepare Results<br/>Set node: human_review_required = YES/NO]
+    L --> M[Count Review Results<br/>Aggregate: documents]
+    M --> N{{Code node<br/>Build Final Summary}}
+    N --> O[Gmail: Send management summary]
+    style J fill:#fde68a,stroke:#92400e
+    style K fill:#bfdbfe,stroke:#1e3a8a
+    style N fill:#bbf7d0,stroke:#14532d

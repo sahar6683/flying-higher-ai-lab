@@ -1,0 +1,656 @@
+{
+  "name": "DocumentIntelligencePipeline-V3",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        -2128
+      ],
+      "id": "33774a25-2ca6-4ad5-ba2e-e4b3a23b2267",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "Upload File to PDF.co",
+        "binaryData": true,
+        "name": "= {{ $json.name }}"
+      },
+      "type": "n8n-nodes-pdfco.PDFco Api",
+      "typeVersion": 1.1,
+      "position": [
+        2256,
+        -2128
+      ],
+      "id": "bbd5d53f-243a-4b87-b04a-0fda4bb1f5e8",
+      "name": "PDFco API1",
+      "credentials": {
+        "pdfcoApi": {
+          "id": "YOUR_PDFCO_API_CREDENTIAL",
+          "name": "YOUR_PDFCO_API_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "Convert from PDF",
+        "url": "={{ $json.url }}",
+        "advancedOptions": {
+          "inline": false
+        }
+      },
+      "type": "n8n-nodes-pdfco.PDFco Api",
+      "typeVersion": 1.1,
+      "position": [
+        2480,
+        -2128
+      ],
+      "id": "e4f43112-eea0-4f57-92ed-fa2be3bb03e5",
+      "name": "PDFco API",
+      "credentials": {
+        "pdfcoApi": {
+          "id": "YOUR_PDFCO_API_CREDENTIAL",
+          "name": "YOUR_PDFCO_API_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2704,
+        -2128
+      ],
+      "id": "4b27205b-9be6-4a7d-ae50-d78918199ec4",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        2928,
+        -2128
+      ],
+      "id": "9d618aa1-5d9c-436c-b2ff-29b5f625ba40",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following business document for Northstar Office Supplies Ltd.\n\nExtract only information supported by the document.\nDo not invent, guess, or assume information.\n\nCreate a structured business analysis.\n\nIdentify:\n- Document type\n- Company / counterparty\n- Summary\n- Financial information\n- Important dates\n- Obligations\n- Action items\n- Potential concerns\n\nThen make a HUMAN REVIEW decision.\n\nSet \"human_review_required\" to TRUE only when the document contains a specific issue that should reasonably require human attention.\n\nHuman review SHOULD be required if the document contains one or more of these:\n\n1. Automatic renewal or an important renewal/cancellation deadline.\n2. Significant or unusual financial commitment, penalty, deposit, price increase, or fee.\n3. Unusual or restrictive termination conditions.\n4. Conflicting, inconsistent, or suspicious dates or information.\n5. Important missing information that prevents proper business review.\n6. Unusual obligations, liabilities, indemnities, restrictions, or responsibilities for Northstar.\n7. Ambiguous language that could materially affect Northstar.\n\nHuman review should NOT be required merely because:\n- The document is a contract.\n- The document contains a normal invoice amount.\n- The document has ordinary payment terms.\n- The document contains standard business obligations.\n- The document is a quotation or agreement by itself.\n\nIMPORTANT:\nIf none of the human-review criteria above apply, set \"human_review_required\" to FALSE.\n\nThe decision must be based only on the contents of this document.\n\nDOCUMENT:\n\n{{ $json.data }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1568,
+        -1744
+      ],
+      "id": "55de111b-bf5f-4e83-b1ec-a81c07f64537",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1584,
+        -1520
+      ],
+      "id": "bd14c2d9-c8a8-498f-895d-e4931ed75637",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL",
+          "name": "YOUR_GEMINI_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"document_type\": \"\",\n  \"company\": \"\",\n  \"summary\": \"\",\n  \"financial_information\": [],\n  \"important_dates\": [],\n  \"obligations\": [],\n  \"action_items\": [],\n  \"potential_concerns\": [],\n  \"human_review_required\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1712,
+        -1520
+      ],
+      "id": "9740a62e-90b7-44a4-9e4d-d994b26df97e",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "sendTo": "<YOUR_TARGET_INBOX@example.com>",
+        "subject": "=Northstar Document Review - {{ $json.output.number_of_documents }} Documents",
+        "message": "=<h2> Northstar AI Document Review</h2>\n\n<h3>Overview</h3>\n\n<p>\n<strong>Number of Documents:</strong><br>\n{{ $json.output.number_of_documents }}\n</p>\n\n<p>\n<strong>Document Types:</strong><br>\n{{ $json.output.types_of_documents.join(\"<br>\") }}\n</p>\n\n<hr>\n\n<h3>📋 Management Summary</h3>\n\n<p>\n{{ $json.output.brief_summary }}\n</p>\n\n<hr>\n\n<h3>⚠️ Human Review Status</h3>\n\n<p>\n<strong>{{ $json.documents.filter(d => d.review_status === \"HUMAN REVIEW REQUIRED\").length }}\nof {{ $json.documents.length }} documents require human review.</strong>\n</p>\n\n<p>\n{{ $json.output.human_attention.join(\"<br>• \") }}\n</p>\n\n<hr>\n\n<h3>💰 Key Financial Commitments</h3>\n\n<p>\n• {{ $json.output.key_financial_commitments.join(\"<br>• \") }}\n</p>\n\n<h3>📅 Important Dates</h3>\n\n<p>\n• {{ $json.output.important_dates.join(\"<br>• \") }}\n</p>\n\n<h3>🔴 Action Items</h3>\n\n<p>\n• {{ $json.output.action_items.join(\"<br>• \") }}\n</p>\n\n<hr>\n\n<p>\n<em>This briefing was automatically generated by the Northstar AI document workflow.</em>\n</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3392,
+        -1616
+      ],
+      "id": "c3f03392-1d6d-4bff-8fd3-8a72b8c64b22",
+      "name": "Send a message",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GMAIL_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "*.pdf",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "<YOUR_GOOGLE_DRIVE_FOLDER_ID>",
+            "mode": "list",
+            "cachedResultName": "<YOUR_DRIVE_FOLDER_NAME>",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/<YOUR_GOOGLE_DRIVE_FOLDER_ID>"
+          },
+          "whatToSearch": "files"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1808,
+        -2128
+      ],
+      "id": "ec7d822e-36a5-4366-9722-bf9a4a45d865",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GOOGLE_DRIVE_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2032,
+        -2128
+      ],
+      "id": "39326d2c-7482-4d53-a4d3-fdffb8d13938",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GOOGLE_DRIVE_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "documents",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        -1616
+      ],
+      "id": "ffcdb9dc-3042-4396-8dbd-363a5266e28b",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Review the individual document analyses below and create ONE concise management summary for Northstar Office Supplies Ltd.\n\nUse only the information contained in these individual analyses.\nDo not invent, guess, or add information that is not provided.\n\nFor the overall management summary, identify:\n\n- Total number of documents\n- Types of documents\n- Brief overall summary\n- Documents requiring human review\n- Why each document was flagged for human review\n- Key financial commitments\n- Important dates and deadlines\n- Renewals or termination issues\n- Other important actions required\n\nPay particular attention to the \"review_status\" field.\n\nIf a document has:\n\"HUMAN REVIEW REQUIRED\"\n\ninclude that document in the human review section and explain the specific concern identified in that document.\n\nIf no documents have \"HUMAN REVIEW REQUIRED\", write:\n\"No documents require human review.\"\n\nDo not treat \"NO HUMAN REVIEW REQUIRED\" as a concern.\n\nINDIVIDUAL DOCUMENT ANALYSES:\n\n{{ JSON.stringify($json.documents) }}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3040,
+        -1616
+      ],
+      "id": "a4071993-d38e-4b8c-923a-48e649a16339",
+      "name": "Basic LLM Chain",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        3056,
+        -1408
+      ],
+      "id": "8445ead3-466c-4dae-a6b0-b3fa89f6200d",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GEMINI_CREDENTIAL",
+          "name": "YOUR_GEMINI_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"number_of_documents\": 3,\n  \"types_of_documents\": [\n    \"Supplier Service Agreement\",\n    \"Software Subscription Agreement\"\n  ],\n  \"brief_summary\": \"Overall summary of the documents reviewed.\",\n  \"human_attention\": [\n    \"Supplier Service Agreement — HUMAN REVIEW REQUIRED because of the automatic renewal provision.\"\n  ],\n  \"key_financial_commitments\": [\n    \"€8,400 per year\"\n  ],\n  \"important_dates\": [\n    \"October 1, 2026\"\n  ],\n  \"action_items\": [\n    \"Review the documents flagged for human attention.\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3184,
+        -1408
+      ],
+      "id": "671d79aa-dad7-4ac4-8643-fcac2387358e",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5e8bf74f-23a4-4043-b14a-b9bd5e6f32d2",
+              "leftValue": "={{ $json.output.human_review_required }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2144,
+        -1616
+      ],
+      "id": "d62fbf20-73c4-42d9-baab-69a0e31c3560",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6aaa64fc-ea1d-40fa-8daf-9bc368a4d57f",
+              "name": "review_status",
+              "value": "HUMAN REVIEW REQUIRED",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2368,
+        -1712
+      ],
+      "id": "399f127c-4f79-4483-bd7b-272d94f237e7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6a6e0811-ddb2-4d5a-af42-1a9bac16b489",
+              "name": "review_status",
+              "value": "NO HUMAN REVIEW REQUIRED",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2368,
+        -1520
+      ],
+      "id": "6bcf388f-b882-47fe-afa1-e283f2ad6739",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2592,
+        -1616
+      ],
+      "id": "f1bed6e3-ad18-466d-9d26-a74875b51996",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        -1488
+      ],
+      "id": "fc6f62aa-3e68-4952-9e1f-a4175f957ede",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        -1744
+      ],
+      "id": "2202e1a3-c5da-4ba2-b67d-de86503cc946",
+      "name": "Wait"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDFco API1": {
+      "main": [
+        [
+          {
+            "node": "PDFco API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDFco API": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "PDFco API1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

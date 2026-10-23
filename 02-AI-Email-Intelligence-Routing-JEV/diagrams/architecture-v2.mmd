@@ -1,0 +1,21 @@
+flowchart TD
+    A([Gmail Trigger<br/>unread, everyWeek, maxResults=5]) --> B[Prepare Email<br/>Set: id, sender, recipient, subject, body]
+    B --> C{{Jev — Classify Email<br/>OpenRouter HTTP<br/>model=typesafe/jev-1.13<br/>question: urgency score}}
+    C -- score >= 6 --> D[Prepare Human Review Output<br/>reason: Email Urgency Score above 6]
+    C -- score < 6 --> E{{Jev — Classify Email #2<br/>question: category choice}}
+    E --> F[Merge1]
+    F --> G{{Switch — Route by Classification<br/>category ∈ sales_inquiry / supplier_communication / billing / customer_complaint / customer_support / general / operations}}
+    G --> H1[Slack #sales]
+    G --> H2[Slack #purchasing]
+    G --> H3[Slack #billing]
+    G --> H4[Slack #customer-experience]
+    G --> H5[Slack #operations]
+    D --> I[Append row in sheet<br/>Google Sheets log]
+    D --> J[Gmail — Notify reviewer]
+    C -- confidence <= 0.6 --> K[Prepare Human Review Output2<br/>reason: Confidence under 60%]
+    K --> L[Append row in sheet1]
+    K --> M[Gmail — Notify reviewer]
+    style C fill:#bfdbfe,stroke:#1e3a8a
+    style E fill:#bfdbfe,stroke:#1e3a8a
+    style G fill:#fde68a,stroke:#92400e
+    style I fill:#bbf7d0,stroke:#14532d

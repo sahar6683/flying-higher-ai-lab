@@ -1,0 +1,452 @@
+{
+  "name": "DocumentIntelligencePipeline-V4",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        -2128
+      ],
+      "id": "26dd103c-a8f7-41d9-8354-5f1ea83b61eb",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "Upload File to PDF.co",
+        "binaryData": true,
+        "name": "= {{ $json.name }}"
+      },
+      "type": "n8n-nodes-pdfco.PDFco Api",
+      "typeVersion": 1.1,
+      "position": [
+        2256,
+        -2128
+      ],
+      "id": "0be9700c-77ff-4844-887f-02a954a6825a",
+      "name": "PDFco API1",
+      "credentials": {
+        "pdfcoApi": {
+          "id": "YOUR_PDFCO_API_CREDENTIAL",
+          "name": "YOUR_PDFCO_API_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "Convert from PDF",
+        "url": "={{ $json.url }}",
+        "advancedOptions": {
+          "inline": false
+        }
+      },
+      "type": "n8n-nodes-pdfco.PDFco Api",
+      "typeVersion": 1.1,
+      "position": [
+        2480,
+        -2128
+      ],
+      "id": "f44358fe-eb7e-4b9e-a715-d81920a97766",
+      "name": "PDFco API",
+      "credentials": {
+        "pdfcoApi": {
+          "id": "YOUR_PDFCO_API_CREDENTIAL",
+          "name": "YOUR_PDFCO_API_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2704,
+        -2128
+      ],
+      "id": "21e5f9e7-d3e2-4dae-b972-a190010e2992",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        2928,
+        -2128
+      ],
+      "id": "7be87d65-5299-4e13-9c5b-14325d9286a7",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are reviewing ONE business document for Northstar Office Supplies Ltd.\n\nYour ONLY task is to decide whether this document requires human review.\n\nReturn ONLY:\nYES\nor\nNO\n\n====================\nRETURN YES ONLY IF:\n====================\n\nThe document contains at least ONE clearly identifiable issue:\n\n1. Automatic renewal or automatic extension.\n\n2. An important renewal or cancellation deadline.\n\n3. A significant or unusual financial commitment.\n\n4. An unusual penalty, fee, deposit, price increase, or financial charge.\n\n5. A restrictive or unusual termination condition.\n\n6. Conflicting information within the document.\n\n7. Important missing information that prevents understanding a material business obligation.\n\n8. An unusual obligation, liability, indemnity, restriction, or other material business risk.\n\n9. An ambiguous or potentially risky business term.\n\n====================\nRETURN NO IF:\n====================\n\nNone of the above issues are clearly present.\n\nIMPORTANT:\n\nAn ordinary invoice is NO.\n\nAn ordinary quotation is NO.\n\nA normal invoice amount is NO.\n\nA normal quotation amount is NO.\n\nNormal VAT is NO.\n\nNormal payment terms are NO.\n\nA normal invoice due date is NO.\n\nA normal quotation validity date is NO.\n\nNormal delivery terms are NO.\n\nNormal installation terms are NO.\n\nNormal product or service descriptions are NO.\n\nNormal contractual obligations are NO.\n\nDo NOT treat the presence of money, dates, payment terms, totals, VAT, or deadlines by themselves as a reason for YES.\n\nDo NOT invent risks.\n\nDo NOT assume that an ordinary business term is unusual.\n\nFor an invoice or quotation, return YES only if it contains one of the specific review issues listed above.\n\nUse ONLY information contained in the document.\n\nReturn ONLY YES or NO.\n\nDocument name:\n{{ $json.document_name }}\n\nDocument text:\n{{ $json.document_text }}",
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1712,
+        -1696
+      ],
+      "id": "967425c7-d787-4cbe-9e69-52dfe0e236de",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "sendTo": "<YOUR_TARGET_INBOX@example.com>",
+        "subject": "=Northstar Document Review Summary",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n</head>\n\n<body style=\"margin:0; padding:0; background-color:#f4f6f8; font-family:Arial, Helvetica, sans-serif; color:#333333;\">\n\n  <div style=\"max-width:650px; margin:30px auto; background:#ffffff; border:1px solid #e1e5e8; border-radius:8px; overflow:hidden;\">\n\n    <!-- Header -->\n    <div style=\"background:#1f2937; padding:24px 30px;\">\n      <h1 style=\"margin:0; color:#ffffff; font-size:22px; font-weight:600;\">\n        Northstar Document Review\n      </h1>\n      <p style=\"margin:6px 0 0; color:#d1d5db; font-size:14px;\">\n        Automated document review summary\n      </p>\n    </div>\n\n    <!-- Summary -->\n    <div style=\"padding:30px;\">\n\n      <h2 style=\"margin:0 0 20px; font-size:18px; color:#1f2937;\">\n        Review Summary\n      </h2>\n\n      <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border-collapse:collapse;\">\n        <tr>\n          <td style=\"padding:14px; border:1px solid #e5e7eb; width:50%;\">\n            <div style=\"font-size:13px; color:#6b7280;\">\n              Total Documents\n            </div>\n            <div style=\"font-size:26px; font-weight:bold; color:#1f2937; margin-top:4px;\">\n              {{ $json.total_documents }}\n            </div>\n          </td>\n\n          <td style=\"padding:14px; border:1px solid #e5e7eb; width:50%;\">\n            <div style=\"font-size:13px; color:#6b7280;\">\n              Requiring Human Review\n            </div>\n            <div style=\"font-size:26px; font-weight:bold; color:#b45309; margin-top:4px;\">\n              {{ $json.review_required_count }}\n            </div>\n          </td>\n        </tr>\n\n        <tr>\n          <td colspan=\"2\" style=\"padding:14px; border:1px solid #e5e7eb;\">\n            <div style=\"font-size:13px; color:#6b7280;\">\n              No Human Review Required\n            </div>\n            <div style=\"font-size:22px; font-weight:bold; color:#374151; margin-top:4px;\">\n              {{ $json.no_review_count }}\n            </div>\n          </td>\n        </tr>\n      </table>\n\n      <!-- Documents -->\n      <div style=\"margin-top:30px;\">\n\n        <h2 style=\"margin:0 0 12px; font-size:18px; color:#1f2937;\">\n          Documents Requiring Human Review\n        </h2>\n\n        <div style=\"background:#fff7ed; border-left:4px solid #f59e0b; padding:16px; border-radius:4px; font-size:14px; line-height:1.7; white-space:pre-line;\">\n          {{ $json.review_documents }}\n        </div>\n\n      </div>\n\n    </div>\n\n    <!-- Footer -->\n    <div style=\"background:#f9fafb; border-top:1px solid #e5e7eb; padding:16px 30px;\">\n      <p style=\"margin:0; font-size:12px; color:#9ca3af;\">\n        This summary was generated automatically by the Northstar document review workflow.\n        Human review should be completed before making business decisions.\n      </p>\n    </div>\n\n  </div>\n\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2864,
+        -1696
+      ],
+      "id": "f74f397d-7c99-454d-ae3f-d6e9bd047305",
+      "name": "Send a message",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GMAIL_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "*.pdf",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "<YOUR_GOOGLE_DRIVE_FOLDER_ID>",
+            "mode": "list",
+            "cachedResultName": "<YOUR_DRIVE_FOLDER_NAME>",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/<YOUR_GOOGLE_DRIVE_FOLDER_ID>"
+          },
+          "whatToSearch": "files"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1808,
+        -2128
+      ],
+      "id": "47f23fc0-76eb-46a8-8ab7-bfa6b1a70755",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GOOGLE_DRIVE_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2032,
+        -2128
+      ],
+      "id": "95964911-fba3-43e6-b77b-0453d305033f",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GOOGLE_DRIVE_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-v4-flash-0731",
+        "options": {
+          "maxTokens": 500,
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1712,
+        -1504
+      ],
+      "id": "d948a0a9-80b3-4606-8673-38c965c32324",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YOUR_OPENROUTER_API_CREDENTIAL",
+          "name": "YOUR_OPENROUTER_API_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "01539b74-9d56-4f3a-8eee-9e7910702273",
+              "name": "document_name",
+              "value": "={{ $('Search files and folders').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "2a6c4bec-f7cf-4351-9c28-951ccd56d7a6",
+              "name": "document_text",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1552,
+        -1936
+      ],
+      "id": "160feb27-880b-4274-9922-c9d5bb0e47bf",
+      "name": "Prepare AI Input"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6aaa64fc-ea1d-40fa-8daf-9bc368a4d57f",
+              "name": "=document_name",
+              "value": "=  {{ $('Download file').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "d8cb8b6e-a77d-4384-8ac9-8cb6cd96bcca",
+              "name": "human_review_required",
+              "value": "={{ $json.text.trim().toUpperCase() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2144,
+        -1696
+      ],
+      "id": "3603fca7-665f-4a0c-9e81-f5bbdb681a13",
+      "name": "Prepare Results"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "documents",
+        "include": "specifiedFields",
+        "fieldsToInclude": "document_name,human_review_required",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2416,
+        -1696
+      ],
+      "id": "b3a3d56f-28f8-4c19-a07d-7e0bf2631cbb",
+      "name": "Count Review Results"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.first().json.documents;\n\nconst totalDocuments = results.length;\n\nconst reviewDocuments = results\n  .filter(item => item.human_review_required === 'YES')\n  .map(item => item.document_name.trim());\n\nconst noReviewCount = results.filter(\n  item => item.human_review_required === 'NO'\n).length;\n\nreturn [\n  {\n    json: {\n      total_documents: totalDocuments,\n      review_required_count: reviewDocuments.length,\n      no_review_count: noReviewCount,\n      review_documents: reviewDocuments.length\n        ? reviewDocuments.join('\\n')\n        : 'None'\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        -1696
+      ],
+      "id": "eb174867-a5d7-42a3-886c-f6763d7bccbf",
+      "name": "Build Final Summary"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDFco API1": {
+      "main": [
+        [
+          {
+            "node": "PDFco API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDFco API": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Prepare AI Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Prepare Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "PDFco API1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare AI Input": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Results": {
+      "main": [
+        [
+          {
+            "node": "Count Review Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count Review Results": {
+      "main": [
+        [
+          {
+            "node": "Build Final Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Final Summary": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

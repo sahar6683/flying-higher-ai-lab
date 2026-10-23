@@ -1,0 +1,1253 @@
+{
+  "name": "AIEmailIntelligenceRouting-JEV-v2",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyWeek"
+            }
+          ]
+        },
+        "maxResults": 5,
+        "filters": {
+          "readStatus": "unread"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        64,
+        -1200
+      ],
+      "id": "4a375b38-0ee5-4fba-a4f6-c34a96545cf5",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GMAIL_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "31bde483-4687-4078-a07b-e8c721a8c36a",
+              "name": "message_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "41f7cd4a-bbee-46c4-8067-e9966b599524",
+              "name": "sender",
+              "value": "={{ $json.from.value[0].address }}",
+              "type": "string"
+            },
+            {
+              "id": "6995e7d7-7e85-4343-bc26-ccd856fbf57d",
+              "name": "recipient",
+              "value": "={{ $('Gmail Trigger').item.json.To }}",
+              "type": "string"
+            },
+            {
+              "id": "9b9de863-0ef3-4dce-b34f-4bf3613871b1",
+              "name": "subject",
+              "value": "= {{ $json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "4d11d9c9-a5c6-4544-9997-b9b24a539e0a",
+              "name": "body",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        512,
+        -1200
+      ],
+      "id": "bf3baa6a-499c-43b8-b6e2-3899978e34e9",
+      "name": "Prepare Email"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/alpha/decisions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_OPENROUTER_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"typesafe/jev-1.13\",\n  \"state\": {\n    \"subject\": {{ JSON.stringify($json.subject) }},\n    \"sender\": {{ JSON.stringify($json.sender) }},\n    \"body\": {{ JSON.stringify($json.body) }}\n  },\n  \"questions\": {\n    \"urgency\": {\n      \"type\": \"score\",\n      \"instructions\": \"Assess how urgently Northstar Office Supplies Ltd. needs to respond to this email. Use only information explicitly contained in the email. Do not infer deadlines, consequences, or urgency that are not supported by the email. A stated date-based deadline does not automatically make an email urgent; a normal business deadline should remain routine. However, explicit business consequences such as payment being withheld, a significant financial dispute, a customer refusing payment, an important business activity being blocked, or a serious escalation should increase the score. Do not classify an email as urgent merely because a customer is inconvenienced, an individual item is faulty, an employee temporarily cannot use something, or the sender asks for a quick response. Consider the scale of the problem, how many people or business activities are affected, whether normal work is blocked, whether there is a significant financial or customer consequence, whether payment is being withheld or disputed, whether the issue is escalated, and whether there is an explicit immediate deadline. A minor issue affecting one person or one item should normally remain low or routine unless the email provides evidence of a significant business consequence, financial consequence, business disruption, or urgent deadline. Use the full 0–9 scoring scale.\",\n      \"criteria\": [\n        \"Business score 1 — Low impact. No date-based deadline is stated. The email is routine and does not require prompt attention. There is little or no meaningful customer, financial, operational, or time-sensitive consequence.\",\n        \n        \"Business score 2 — Low impact. No date-based deadline is stated. The email requires some normal business action, but there is little consequence if the response takes time. A minor inconvenience, simple information request, or limited issue affecting one person or one item belongs here when there is no significant business disruption.\",\n        \n        \"Business score 3 — Low impact. No date-based deadline is stated. The email requires attention but remains low impact. A minor technical problem, isolated product issue, or individual inconvenience belongs here when normal business activity continues and there is no significant escalation, financial consequence, or urgent customer consequence.\",\n        \n        \"Business score 4 — Routine. The email concerns normal business work or a normal business request. A date-based deadline may be stated, but it is not immediate or critical. The matter can be handled through normal business processes.\",\n        \n        \"Business score 5 — Routine. The email requires normal follow-up and may involve a stated date-based deadline, customer issue, operational problem, or financial consideration. The issue may be causing some disruption, but it does not indicate a significant business consequence or need for immediate intervention.\",\n        \n        \"Business score 6 — Routine but important. The matter requires reasonably prompt attention because of a meaningful deadline, ongoing disruption, customer concern, financial dispute, invoice discrepancy, payment issue, or operational problem. Payment being withheld or disputed is a meaningful business consequence and should generally place the email toward the upper end of the routine range unless there are additional signs of serious escalation or immediate risk.\",\n        \n        \"Business score 7 — Urgent. The email indicates that prompt human attention is needed because of a significant deadline, substantial ongoing disruption, important customer consequence, financial consequence, payment being withheld in a significant dispute, serious escalation, or an operational problem affecting important business activity.\",\n        \n        \"Business score 8 — Urgent. The email indicates a serious or time-sensitive business issue requiring prompt human attention. A critical deadline may be approaching, significant operations may be affected, multiple people may be blocked, payment or a significant financial transaction may be at risk, or a customer consequence may be substantial.\",\n        \n        \"Business score 9 — Urgent. The email indicates a serious business problem requiring immediate human attention. Significant operations, customers, finances, contractual obligations, payments, or important deadlines are at risk.\",\n        \n        \"Business score 10 — Urgent. The email describes an immediate and serious business situation requiring urgent human intervention, such as a critical deadline, major operational disruption, severe customer escalation, substantial financial exposure, significant payment consequences, or significant business activity being blocked.\"\n      ]\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        736,
+        -1296
+      ],
+      "id": "d8de3eff-47b1-4b1a-a5ae-42b4d5f41ba9",
+      "name": "Jev — Classify Email",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YOUR_OPENROUTER_API_CREDENTIAL",
+          "name": "YOUR_OPENROUTER_API_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 7,
+        "simple": false,
+        "filters": {
+          "includeSpamTrash": false,
+          "sender": "<YOUR_TARGET_INBOX@example.com>"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        288,
+        -1200
+      ],
+      "id": "5bf7b735-33c9-4429-b929-8a9ab96d3330",
+      "name": "Get many messages",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GMAIL_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c22f473f-9030-4662-ad19-0232af2eabb1",
+              "name": "status",
+              "value": "Human review required",
+              "type": "string"
+            },
+            {
+              "id": "e4767ff4-bbfa-4aa2-b9fd-0c47b817e00b",
+              "name": "reason ",
+              "value": "Email Urgency Score above 6",
+              "type": "string"
+            },
+            {
+              "id": "82884981-9292-47c8-a466-4c186ba5dc5c",
+              "name": "Score",
+              "value": "={{ $json.answers.urgency.score }}",
+              "type": "number"
+            },
+            {
+              "id": "42073824-bd52-4deb-ab57-dab4375fbc33",
+              "name": "Confidence",
+              "value": "={{ $json.answers.urgency.confidence }}",
+              "type": "number"
+            },
+            {
+              "id": "66e05d3f-6d15-42e2-aed1-daf602c3768b",
+              "name": "sender",
+              "value": "={{ $('Prepare Email').item.json.sender }}",
+              "type": "string"
+            },
+            {
+              "id": "90af0989-ff43-4989-8ed6-b77755ca1644",
+              "name": "subject",
+              "value": "={{ $('Prepare Email').item.json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "8baeaaad-a7fe-4f33-b58f-93279582255e",
+              "name": "message_id",
+              "value": "={{ $('Prepare Email').item.json.message_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        192,
+        -944
+      ],
+      "id": "a8403db5-c4e7-4305-b013-ba315f5c9726",
+      "name": "Prepare Human Review Output"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/<YOUR_GOOGLE_SHEETS_ID>/edit?usp=drive_link",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/<YOUR_GOOGLE_SHEETS_ID>/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Sender": "={{ $('Prepare Human Review Output').item.json.sender }}",
+            "Subject": "={{ $('Prepare Human Review Output').item.json.subject }}",
+            "Message ID": "={{ $('Prepare Human Review Output').item.json.message_id }}",
+            "Status": "={{ $('Prepare Human Review Output').item.json.status }}",
+            "Reason": "={{ $('Prepare Human Review Output').item.json['reason '] }}",
+            "Score": "={{ $('Prepare Human Review Output').item.json.Score }}",
+            "Confidence": "={{ $('Prepare Human Review Output').item.json.Confidence }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Confidence",
+              "displayName": "Confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sender",
+              "displayName": "Sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message ID",
+              "displayName": "Message ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        640,
+        -944
+      ],
+      "id": "ddbef0b0-111c-4634-8524-b5ee10e4f7a4",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GOOGLE_SHEETS_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "<YOUR_TARGET_INBOX@example.com>",
+        "subject": "Human Review Required - Urgency Score above 6",
+        "message": "=<div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 650px; margin: 0 auto; color: #333333;\">\n\n  <div style=\"background-color: #1f2937; padding: 20px 25px; border-radius: 8px 8px 0 0;\">\n    <h2 style=\"color: #ffffff; margin: 0; font-size: 20px;\">\n      Human Review Required\n    </h2>\n    <p style=\"color: #d1d5db; margin: 6px 0 0 0; font-size: 14px;\">\n      Incoming email flagged for review\n    </p>\n  </div>\n\n  <div style=\"border: 1px solid #e5e7eb; border-top: none; padding: 25px; border-radius: 0 0 8px 8px;\">\n\n    <p style=\"font-size: 15px; line-height: 1.6;\">\n      An incoming email has been flagged for human review because the AI\n      classification business score is above 6 (Urgent).\n    </p>\n\n    <div style=\"background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 18px; margin: 20px 0;\">\n\n      <p style=\"margin: 0 0 12px 0;\">\n        <strong>Subject</strong><br>\n        {{$json.subject}}\n      </p>\n\n      <p style=\"margin: 0 0 12px 0;\">\n        <strong>Sender</strong><br>\n        {{$json.sender}}\n      </p>\n\n      <p style=\"margin: 0 0 12px 0;\">\n        <strong>Score</strong><br>\n     {{ $json.Score }}\n      </p>\n<p style=\"margin: 0 0 12px 0;\">\n        <strong>Confidence</strong><br>\n     {{ $json.Confidence }}\n      </p>\n  \n    </div>\n\n    <div style=\"background-color: #fff7ed; border-left: 4px solid #f97316; padding: 12px 15px; margin-top: 20px;\">\n      <strong>Reason for review</strong><br>\n      {{ $json['reason '] }}\n    </div>\n\n    <p style=\"font-size: 13px; color: #6b7280; margin-top: 25px;\">\n      This notification was generated automatically by the Northstar\n      Email Intelligence &amp; Routing System.\n    </p>\n\n  </div>\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        -944
+      ],
+      "id": "f90906ec-941d-48e1-b2b7-590f4022458b",
+      "name": "Prepare Human Review Output1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GMAIL_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        976,
+        -1200
+      ],
+      "id": "6c9e7bcc-be64-4454-91ae-abef9f4d0be9",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "554eb1b6-8cc7-4c00-bc5b-e2a0fcddbba4",
+              "leftValue": "={{ $json.answers.urgency.score }}",
+              "rightValue": "=6",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -32,
+        -816
+      ],
+      "id": "dd7f8938-5d2d-4b19-8a78-afcd8b4d50e7",
+      "name": "If - Interpret Urgency Score"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "82858801-26b1-4385-9636-2e6d7056351d",
+              "leftValue": "={{ $json.answers.urgency.confidence }}",
+              "rightValue": "=0.6",
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        192,
+        -576
+      ],
+      "id": "413e8e67-1aa7-4dc6-9577-9b37275a9eea",
+      "name": "If - check low confidence"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c22f473f-9030-4662-ad19-0232af2eabb1",
+              "name": "status",
+              "value": "Human review required",
+              "type": "string"
+            },
+            {
+              "id": "e4767ff4-bbfa-4aa2-b9fd-0c47b817e00b",
+              "name": "reason ",
+              "value": "Confidence less than 60%",
+              "type": "string"
+            },
+            {
+              "id": "54da5595-0861-4415-a3bf-9480abf7f7fe",
+              "name": "Confidence",
+              "value": "={{ $json.answers.urgency.confidence }}",
+              "type": "number"
+            },
+            {
+              "id": "82884981-9292-47c8-a466-4c186ba5dc5c",
+              "name": "Score",
+              "value": "={{ $json.answers.urgency.score }}",
+              "type": "number"
+            },
+            {
+              "id": "66e05d3f-6d15-42e2-aed1-daf602c3768b",
+              "name": "sender",
+              "value": "={{ $('Prepare Email').item.json.sender }}",
+              "type": "string"
+            },
+            {
+              "id": "90af0989-ff43-4989-8ed6-b77755ca1644",
+              "name": "subject",
+              "value": "={{ $('Prepare Email').item.json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "8baeaaad-a7fe-4f33-b58f-93279582255e",
+              "name": "message_id",
+              "value": "={{ $('Prepare Email').item.json.message_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        416,
+        -752
+      ],
+      "id": "bd8563e6-81b4-4db2-8425-c6340567e5ae",
+      "name": "Prepare Human Review Output2"
+    },
+    {
+      "parameters": {
+        "sendTo": "<YOUR_TARGET_INBOX@example.com>",
+        "subject": "Human Review Required - Confidence under 60%",
+        "message": "=<div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 650px; margin: 0 auto; color: #333333;\">\n\n  <div style=\"background-color: #1f2937; padding: 20px 25px; border-radius: 8px 8px 0 0;\">\n    <h2 style=\"color: #ffffff; margin: 0; font-size: 20px;\">\n      Human Review Required\n    </h2>\n    <p style=\"color: #d1d5db; margin: 6px 0 0 0; font-size: 14px;\">\n      Incoming email flagged for review\n    </p>\n  </div>\n\n  <div style=\"border: 1px solid #e5e7eb; border-top: none; padding: 25px; border-radius: 0 0 8px 8px;\">\n\n    <p style=\"font-size: 15px; line-height: 1.6;\">\n      An incoming email has been flagged for human review because the AI\n      Confidence score is under 60%.\n    </p>\n\n    <div style=\"background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 18px; margin: 20px 0;\">\n\n      <p style=\"margin: 0 0 12px 0;\">\n        <strong>Subject</strong><br>\n        {{$json.subject}}\n      </p>\n\n      <p style=\"margin: 0 0 12px 0;\">\n        <strong>Sender</strong><br>\n        {{$json.sender}}\n      </p>\n\n      <p style=\"margin: 0 0 12px 0;\">\n        <strong>Score</strong><br>\n     {{ $json.Score }}\n      </p>\n<p style=\"margin: 0 0 12px 0;\">\n        <strong>Confidence</strong><br>\n     {{ $json.Confidence }}\n      </p>\n  \n    </div>\n\n    <div style=\"background-color: #fff7ed; border-left: 4px solid #f97316; padding: 12px 15px; margin-top: 20px;\">\n      <strong>Reason for review</strong><br>\n      {{ $json['reason '] }}\n    </div>\n\n    <p style=\"font-size: 13px; color: #6b7280; margin-top: 25px;\">\n      This notification was generated automatically by the Northstar\n      Email Intelligence &amp; Routing System.\n    </p>\n\n  </div>\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        -752
+      ],
+      "id": "381171bc-09fe-4175-9b81-cafbe3c0b7b9",
+      "name": "Prepare Human Review Output3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GMAIL_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/<YOUR_GOOGLE_SHEETS_ID>/edit?usp=drive_link",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/<YOUR_GOOGLE_SHEETS_ID>/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Sender": "={{ $('Prepare Human Review Output2').item.json.sender }}",
+            "Subject": "={{ $('Prepare Human Review Output2').item.json.subject }}",
+            "Message ID": "={{ $('Prepare Human Review Output2').item.json.message_id }}",
+            "Status": "= {{ $('Prepare Human Review Output2').item.json.status }}",
+            "Reason": "={{ $('Prepare Human Review Output2').item.json['reason '] }}",
+            "Score": "={{ $('Prepare Human Review Output2').item.json.Score }}",
+            "Confidence": "={{ $('Prepare Human Review Output2').item.json.Confidence }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Confidence",
+              "displayName": "Confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sender",
+              "displayName": "Sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message ID",
+              "displayName": "Message ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        800,
+        -752
+      ],
+      "id": "fb02a9f2-2055-4d16-b5e9-0f7464697692",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GOOGLE_SHEETS_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/alpha/decisions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_OPENROUTER_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"typesafe/jev-1.13\",\n  \"state\": {\n    \"subject\": {{ JSON.stringify($json.subject) }},\n    \"sender\": {{ JSON.stringify($json.sender) }},\n    \"body\": {{ JSON.stringify($json.body) }}\n  },\n  \"questions\": {\n    \"category\": {\n      \"type\": \"choice\",\n      \"instructions\": \"What category best describes this incoming business email?\",\n      \"criteria\": {\n        \"customer_support\": \"The customer is asking for help with an existing product, service, order, delivery, account, or problem.\",\n        \"sales_inquiry\": \"The sender is asking about buying products or services, requesting a quotation, pricing, availability, or sales information.\",\n        \"customer_complaint\": \"The sender is expressing dissatisfaction, reporting a serious problem, or making a complaint about Northstar's products, services, staff, or handling of an issue.\",\n        \"supplier_communication\": \"The email is primarily from or about a supplier, vendor, purchasing relationship, supply arrangement, or supplier-related matter.\",\n        \"invoice_payment\": \"The email concerns an invoice, payment, payment status, billing, accounts payable, or money owed.\",\n        \"urgent_service\": \"The email reports an urgent service, maintenance, equipment, technology, or operational problem requiring prompt attention.\",\n        \"meeting_information\": \"The sender is requesting or discussing a meeting, appointment, general business information, or information that does not fit another category.\",\n        \"general\": \"The email is general, informational, administrative, or low-priority and does not clearly fit another category.\"\n      }\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        416,
+        -464
+      ],
+      "id": "393c6ca2-2798-47e1-893f-1ec41002064d",
+      "name": "HTTP Request - Jev — Classify Email",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YOUR_OPENROUTER_API_CREDENTIAL",
+          "name": "YOUR_OPENROUTER_API_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        640,
+        -464
+      ],
+      "id": "5304e227-ee9e-4aa8-bcc3-de6bb918b852",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "<YOUR_SLACK_CHANNEL_ID>",
+          "mode": "list",
+          "cachedResultName": "sales"
+        },
+        "text": "Test Sales incoming",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        1088,
+        -896
+      ],
+      "id": "75a59092-67c6-42a2-ac5f-f3f846e92cff",
+      "name": "Send a message",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "YOUR_SLACK_OAUTH2_CREDENTIAL",
+          "name": "YOUR_SLACK_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ee2fcd5a-7463-4690-80ce-b35dd4009452",
+                    "leftValue": "={{ $json.answers.category.choice }}",
+                    "rightValue": "sales_inquiry",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0354969c-0de4-4e14-a348-f0ee96e796d5",
+                    "leftValue": "={{ $json.answers.category.choice }}",
+                    "rightValue": "supplier_communication",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ae48f7ef-0fe4-4134-955c-3ffb416fd2cb",
+                    "leftValue": "={{ $json.answers.category.choice }}",
+                    "rightValue": "invoice_payment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5c7e2c0b-3393-4c6e-a8ff-bdec40df5a35",
+                    "leftValue": "={{ $json.answers.category.choice }}",
+                    "rightValue": "customer_support",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6275745b-0e22-41b0-8075-930bf8538136",
+                    "leftValue": "={{ $json.answers.category.choice }}",
+                    "rightValue": "customer_complaint",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d82112ae-1a90-4428-8903-aa402db090c2",
+                    "leftValue": "={{ $json.answers.category.choice }}",
+                    "rightValue": "urgent_service",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7cbf30f6-7a78-4ead-bfd6-dcbdf0c8fefc",
+                    "leftValue": "={{ $json.answers.category.choice }}",
+                    "rightValue": "meeting_information",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3333cea8-48ab-4cbc-859a-4517aaac8f70",
+                    "leftValue": "={{ $json.answers.category.choice }}",
+                    "rightValue": "general",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        864,
+        -560
+      ],
+      "id": "6227b9e2-cc53-4f39-9de5-b88b931f234f",
+      "name": "Switch - Route by Classification"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "<YOUR_SLACK_CHANNEL_ID>",
+          "mode": "list",
+          "cachedResultName": "purchasing"
+        },
+        "text": "Test Purchasing incoming",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        1088,
+        -736
+      ],
+      "id": "580a011a-9256-4199-9668-673a90f4fbcb",
+      "name": "Send a message1",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "YOUR_SLACK_OAUTH2_CREDENTIAL",
+          "name": "YOUR_SLACK_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "<YOUR_SLACK_CHANNEL_ID>",
+          "mode": "list",
+          "cachedResultName": "billing"
+        },
+        "text": "Test Billing incoming",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        1088,
+        -560
+      ],
+      "id": "b82ac082-757c-4616-acab-4f587f6fd018",
+      "name": "Send a message2",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "YOUR_SLACK_OAUTH2_CREDENTIAL",
+          "name": "YOUR_SLACK_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "<YOUR_SLACK_CHANNEL_ID>",
+          "mode": "list",
+          "cachedResultName": "customer-experience"
+        },
+        "text": "Test Customer Ex incoming",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        1088,
+        -352
+      ],
+      "id": "830bf259-ae09-447e-80e2-020f7dca72c7",
+      "name": "Send a message3",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "YOUR_SLACK_OAUTH2_CREDENTIAL",
+          "name": "YOUR_SLACK_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "<YOUR_SLACK_CHANNEL_ID>",
+          "mode": "list",
+          "cachedResultName": "operations"
+        },
+        "text": "Test Operations incoming",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        1088,
+        -160
+      ],
+      "id": "d4266424-2671-4739-82fa-f12eb15d82fe",
+      "name": "Send a message4",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "YOUR_SLACK_OAUTH2_CREDENTIAL",
+          "name": "YOUR_SLACK_OAUTH2_CREDENTIAL"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email": {
+      "main": [
+        [
+          {
+            "node": "Jev — Classify Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jev — Classify Email": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Human Review Output": {
+      "main": [
+        [
+          {
+            "node": "Prepare Human Review Output1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Human Review Output1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "If - Interpret Urgency Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Interpret Urgency Score": {
+      "main": [
+        [
+          {
+            "node": "Prepare Human Review Output",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If - check low confidence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - check low confidence": {
+      "main": [
+        [
+          {
+            "node": "Prepare Human Review Output2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request - Jev — Classify Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Prepare Human Review Output2": {
+      "main": [
+        [
+          {
+            "node": "Prepare Human Review Output3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Human Review Output3": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Jev — Classify Email": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Switch - Route by Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch - Route by Classification": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

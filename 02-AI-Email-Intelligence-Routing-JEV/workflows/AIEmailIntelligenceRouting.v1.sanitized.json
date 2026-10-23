@@ -1,0 +1,506 @@
+{
+  "name": "AIEmailIntelligenceRouting-JEV-v1",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "unit": "minutes"
+            }
+          ]
+        },
+        "maxResults": 5,
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -1024,
+        -384
+      ],
+      "id": "048d09cd-2247-4e45-a94b-c6b93eb4bb02",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GMAIL_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "31bde483-4687-4078-a07b-e8c721a8c36a",
+              "name": "message_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "41f7cd4a-bbee-46c4-8067-e9966b599524",
+              "name": "sender",
+              "value": "={{ $json.from.value[0].address }}",
+              "type": "string"
+            },
+            {
+              "id": "6995e7d7-7e85-4343-bc26-ccd856fbf57d",
+              "name": "recipient",
+              "value": "={{ $('Gmail Trigger').item.json.To }}",
+              "type": "string"
+            },
+            {
+              "id": "9b9de863-0ef3-4dce-b34f-4bf3613871b1",
+              "name": "subject",
+              "value": "={{ $('Gmail Trigger').item.json.Subject }}",
+              "type": "string"
+            },
+            {
+              "id": "4d11d9c9-a5c6-4544-9997-b9b24a539e0a",
+              "name": "body",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -576,
+        -384
+      ],
+      "id": "4334b1f4-8a5d-4f34-a37e-ed1006210e21",
+      "name": "Prepare Email"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/alpha/decisions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_OPENROUTER_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"typesafe/jev-1.13\",\n  \"state\": {\n    \"subject\": {{ JSON.stringify($json.subject) }},\n    \"sender\": {{ JSON.stringify($json.sender) }},\n    \"body\": {{ JSON.stringify($json.body) }}\n  },\n  \"questions\": {\n    \"category\": {\n      \"type\": \"choice\",\n      \"instructions\": \"What category best describes this incoming business email?\",\n      \"criteria\": {\n        \"customer_support\": \"The customer is asking for help with an existing product, service, order, delivery, account, or problem.\",\n        \"sales_inquiry\": \"The sender is asking about buying products or services, requesting a quotation, pricing, availability, or sales information.\",\n        \"customer_complaint\": \"The sender is expressing dissatisfaction, reporting a serious problem, or making a complaint about Northstar's products, services, staff, or handling of an issue.\",\n        \"supplier_communication\": \"The email is primarily from or about a supplier, vendor, purchasing relationship, supply arrangement, or supplier-related matter.\",\n        \"invoice_payment\": \"The email concerns an invoice, payment, payment status, billing, accounts payable, or money owed.\",\n        \"urgent_service\": \"The email reports an urgent service, maintenance, equipment, technology, or operational problem requiring prompt attention.\",\n        \"meeting_information\": \"The sender is requesting or discussing a meeting, appointment, general business information, or information that does not fit another category.\",\n        \"general\": \"The email is general, informational, administrative, or low-priority and does not clearly fit another category.\"\n      }\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -352,
+        -368
+      ],
+      "id": "41d3c177-4f39-4a9e-85f9-2e6bd58e47c8",
+      "name": "Jev — Classify Email",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YOUR_OPENROUTER_API_CREDENTIAL",
+          "name": "YOUR_OPENROUTER_API_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 7,
+        "simple": false,
+        "filters": {
+          "includeSpamTrash": false,
+          "sender": "<YOUR_TARGET_INBOX@example.com>"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -800,
+        -384
+      ],
+      "id": "122d122f-fcac-4675-abf9-3e4d895eda19",
+      "name": "Get many messages",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GMAIL_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "40dfbf5d-7957-43ce-859f-d645be45f7b4",
+              "leftValue": "={{ $json.answers.category.confidence }}",
+              "rightValue": 0.85,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -128,
+        -384
+      ],
+      "id": "0a94aef7-1fde-4784-bb21-f8996f2e73ef",
+      "name": "If- Confidence Check"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c22f473f-9030-4662-ad19-0232af2eabb1",
+              "name": "status",
+              "value": "Human review required",
+              "type": "string"
+            },
+            {
+              "id": "e4767ff4-bbfa-4aa2-b9fd-0c47b817e00b",
+              "name": "reason ",
+              "value": "Jev confidence below 85%",
+              "type": "string"
+            },
+            {
+              "id": "16bd5cb3-10ec-47f2-979d-f3589782244c",
+              "name": "category",
+              "value": "={{ $json.answers.category.choice }}",
+              "type": "string"
+            },
+            {
+              "id": "ae6377ec-36bb-404a-871d-df4316de8e18",
+              "name": "confidence",
+              "value": "={{ $json.answers.category.confidence }}",
+              "type": "number"
+            },
+            {
+              "id": "66e05d3f-6d15-42e2-aed1-daf602c3768b",
+              "name": "sender",
+              "value": "={{ $('Prepare Email').item.json.sender }}",
+              "type": "string"
+            },
+            {
+              "id": "90af0989-ff43-4989-8ed6-b77755ca1644",
+              "name": "subject",
+              "value": "={{ $('Prepare Email').item.json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "8baeaaad-a7fe-4f33-b58f-93279582255e",
+              "name": "message_id",
+              "value": "={{ $('Prepare Email').item.json.message_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        48,
+        -528
+      ],
+      "id": "17cd4b96-9eeb-4162-bca9-a5ede03daca9",
+      "name": "Prepare Human Review Output"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/<YOUR_GOOGLE_SHEETS_ID>/edit?usp=drive_link",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/<YOUR_GOOGLE_SHEETS_ID>/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "={{ $json.status }}",
+            "Reason": "={{ $json['reason '] }}",
+            "Category": "={{ $json.category }}",
+            "Confidence": "={{ $json.confidence }}",
+            "Sender": "={{ $json.sender }}",
+            "Subject": "={{ $json.subject }}",
+            "Message ID": "={{ $json.message_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Confidence",
+              "displayName": "Confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sender",
+              "displayName": "Sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message ID",
+              "displayName": "Message ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        512,
+        -528
+      ],
+      "id": "f7c02ddc-9b05-499a-9cd5-e21ba5def550",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GOOGLE_SHEETS_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "<YOUR_TARGET_INBOX@example.com>",
+        "subject": "Human Review Required - Email Below 85% Confidence",
+        "message": "=<div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 650px; margin: 0 auto; color: #333333;\">\n\n  <div style=\"background-color: #1f2937; padding: 20px 25px; border-radius: 8px 8px 0 0;\">\n    <h2 style=\"color: #ffffff; margin: 0; font-size: 20px;\">\n      Human Review Required\n    </h2>\n    <p style=\"color: #d1d5db; margin: 6px 0 0 0; font-size: 14px;\">\n      Incoming email flagged for review\n    </p>\n  </div>\n\n  <div style=\"border: 1px solid #e5e7eb; border-top: none; padding: 25px; border-radius: 0 0 8px 8px;\">\n\n    <p style=\"font-size: 15px; line-height: 1.6;\">\n      An incoming email has been flagged for human review because the AI\n      classification confidence is below the 85% threshold.\n    </p>\n\n    <div style=\"background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 18px; margin: 20px 0;\">\n\n      <p style=\"margin: 0 0 12px 0;\">\n        <strong>Subject</strong><br>\n        {{$json.subject}}\n      </p>\n\n      <p style=\"margin: 0 0 12px 0;\">\n        <strong>Sender</strong><br>\n        {{$json.sender}}\n      </p>\n\n      <p style=\"margin: 0 0 12px 0;\">\n        <strong>AI Category</strong><br>\n        {{$json.category}}\n      </p>\n\n      <p style=\"margin: 0;\">\n        <strong>AI Confidence</strong><br>\n        {{$json.confidence}}\n      </p>\n\n    </div>\n\n    <div style=\"background-color: #fff7ed; border-left: 4px solid #f97316; padding: 12px 15px; margin-top: 20px;\">\n      <strong>Reason for review</strong><br>\n      {{ $json['reason '] }}\n    </div>\n\n    <p style=\"font-size: 13px; color: #6b7280; margin-top: 25px;\">\n      This notification was generated automatically by the Northstar\n      Email Intelligence &amp; Routing System.\n    </p>\n\n  </div>\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        -528
+      ],
+      "id": "5ebcf2a4-1f18-4a1b-8bdc-a65b85c64457",
+      "name": "Prepare Human Review Output1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_OAUTH2_CREDENTIAL",
+          "name": "YOUR_GMAIL_OAUTH2_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/alpha/decisions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_OPENROUTER_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"typesafe/jev-1.13\",\n  \"state\": {\n    \"subject\": {{ JSON.stringify($('Prepare Email').item.json.subject) }},\n    \"sender\": {{ JSON.stringify($('Prepare Email').item.json.sender) }},\n    \"body\": {{ JSON.stringify($('Prepare Email').item.json.body) }},\n    \"category\": {{ JSON.stringify($json.answers.category.choice) }}\n  },\n  \"questions\": {\n    \"priority\": {\n      \"type\": \"choice\",\n      \"instructions\": \"How urgent is this incoming business email?\",\n      \"criteria\": {\n        \"routine\": \"The email is a normal business request or communication that does not require prompt attention and can be handled through the normal workflow.\",\n        \"important\": \"The email requires meaningful attention or has a significant business consequence, but it is not time-critical and does not require immediate action.\",\n        \"urgent\": \"The email requires prompt or immediate attention because it involves a serious operational problem, significant customer impact, a time-sensitive deadline, a service disruption, or another situation where delay could cause meaningful business consequences.\"\n      }\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        128,
+        -288
+      ],
+      "id": "ab958f62-fee1-4246-acd8-7749bd1b658a",
+      "name": "Jev — Assess Priority",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YOUR_OPENROUTER_API_CREDENTIAL",
+          "name": "YOUR_OPENROUTER_API_CREDENTIAL"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email": {
+      "main": [
+        [
+          {
+            "node": "Jev — Classify Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jev — Classify Email": {
+      "main": [
+        [
+          {
+            "node": "If- Confidence Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If- Confidence Check": {
+      "main": [
+        [
+          {
+            "node": "Prepare Human Review Output",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Jev — Assess Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Human Review Output": {
+      "main": [
+        [
+          {
+            "node": "Prepare Human Review Output1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Human Review Output1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

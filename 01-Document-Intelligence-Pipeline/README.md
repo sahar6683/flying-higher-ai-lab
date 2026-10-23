@@ -272,7 +272,7 @@ return [{
 
 ## 📖 Related reading
 
-- **<a href="https://flyinghigherai.substack.com/p/i-thought-ai-could-build-the-automation" target="_blank" rel="noopener noreferrer">01 — I Thought AI Could Build the Automation for Me. Then I Had to Learn How to Think Like an Engineer ↗</a>**  
+- **<a href="https://flyinghigherai.substack.com/p/i-thought-ai-could-build-the-automation" target="_blank" rel="noopener noreferrer">I Thought AI Could Build the Automation for Me. Then I Had to Learn How to Think Like an Engineer ↗</a>**  
   The honest journey from *"GPT, build me an automation"* to *"GPT, help me build **my** automation."* Covers the failure modes of blindly following AI architecture suggestions, handling API rate limits and item multiplication, replacing fragile LLM aggregation with deterministic code, and when to use n8n at all.
 
 

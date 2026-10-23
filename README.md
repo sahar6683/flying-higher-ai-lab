@@ -70,17 +70,15 @@ flying-higher-ai-lab/
 │       └── DocumentAnalysisV4.sanitized.json
 │
 ├── 02-AI-Email-Intelligence-Routing-JEV/
-│   ├── README.md                          ← deep-dive: v1 → v2 evolution
-│   ├── diagrams/
-│   │   ├── architecture-v2.mmd
-│   │   └── routing-overview.mmd
-│   └── workflows/
-│       ├── AIEmailIntelligenceRouting.v1.sanitized.json
-│       └── AIEmailIntelligenceRouting.v2.sanitized.json
-│
-└── articles/
-    ├── 01-i-thought-ai-could-build-the-automation-for-me.md
-    └── 02-i-thought-llms-could-handle-yesno-decisions.md
+   ├── README.md                          ← deep-dive: v1 → v2 evolution
+   ├── diagrams/
+   │   ├── architecture-v2.mmd
+   │   └── routing-overview.mmd
+   └── workflows/
+       ├── AIEmailIntelligenceRouting.v1.sanitized.json
+       └── AIEmailIntelligenceRouting.v2.sanitized.json
+
+
 ```
 
 ---

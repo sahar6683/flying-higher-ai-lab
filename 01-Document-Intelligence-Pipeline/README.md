@@ -272,9 +272,7 @@ return [{
 
 ## 📖 Related reading
 
-- [Article 01 — I Thought AI Could Build the Automation for Me](../../articles/01-i-thought-ai-could-build-the-automation-for-me.md) — full engineering diary.
-- [Article 02 — I Thought LLMs Could Handle Yes/No Decisions](../../articles/02-i-thought-llms-could-handle-yesno-decisions.md) — eval set discipline, V4 in detail.
-- [Project 02 — Email Intelligence & Routing (Jev)](../02-AI-Email-Intelligence-Routing-JEV) — sibling project applying the same lessons to inbound email.
+- [Article 01 — I Thought AI Could Build the Automation for Me. Then I Had to Learn How to Think Like an Engineer]([../../articles/01-i-thought-ai-could-build-the-automation-for-me.md](https://flyinghigherai.substack.com/p/i-thought-ai-could-build-the-automation))  
 
 ---
 

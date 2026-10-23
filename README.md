@@ -124,24 +124,25 @@ This is the single biggest change that took my systems from "looks promising in 
 ## 📚 Published Articles (Flying Higher AI on Substack)
 
 Every system in this repository is paired with a deep-dive engineering case study documenting the architectural trade-offs, failure modes, and benchmark results behind the build:
+*Tip: Hold `Ctrl` (Windows) or `Cmd` (Mac) while clicking to open articles in a new tab!*
 
-- **[01 — I Thought AI Could Build the Automation for Me. Then I Had to Learn How to Think Like an Engineer](https://flyinghigherai.substack.com/p/i-thought-ai-could-build-the-automation)**  
+- **<a href="https://flyinghigherai.substack.com/p/i-thought-ai-could-build-the-automation" target="_blank" rel="noopener noreferrer">01 — I Thought AI Could Build the Automation for Me. Then I Had to Learn How to Think Like an Engineer ↗</a>**  
   The honest journey from *"GPT, build me an automation"* to *"GPT, help me build **my** automation."* Covers the failure modes of blindly following AI architecture suggestions, handling API rate limits and item multiplication, replacing fragile LLM aggregation with deterministic code, and when to use n8n at all.
 
-- **[02 — I Thought LLMs Could Handle "Yes/No" Decisions. Here's What I Learned.](https://flyinghigherai.substack.com/p/i-thought-llms-could-handle-yesno)**  
-  A live case study of building a binary `YES/NO` review gate for incoming business documents. Explores why standard LLMs over-escalate, how bidirectional negative-boundary prompting and `temperature: 0` change behavior across Gemini and DeepSeek, and why an evaluation dataset is non-negotiable before scaling.
+- **<a href="https://flyinghigherai.substack.com/p/i-thought-llms-could-handle-yesno" target="_blank" rel="noopener noreferrer">02 — I Thought LLMs Could Handle "Yes/No" Decisions. Here's What I Learned ↗</a>**  
+  A live case study of building a YES/NO review classifier for incoming business documents. Explores how temperature, prompt phrasing, and model choice change the result, why raw LLMs drift on binary classification, and why an evaluation set is non-negotiable.
 
-- **[03 — How Integrating JEV Made My Email Routing Faster and More Accurate](https://flyinghigherai.substack.com/p/how-integrating-jev-made-my-email)**  
-  Why free-form generative LLMs are overkill for operational triage. Walks through replacing fragile JSON prompt parsing with TypeSafe's `jev` System-1 decision model to get low-latency, schema-guaranteed classifications, epistemic confidence scores, and automated human-in-the-loop escalation.
+- **<a href="https://flyinghigherai.substack.com/p/how-integrating-jev-made-my-email" target="_blank" rel="noopener noreferrer">03 — How Integrating JEV Made My Email Routing Faster and More Accurate ↗</a>**  
+  Replacing brittle multi-branch prompt chains with a structured System-1 decision model (`jev`). How typed classification criteria and confidence scores transformed a noisy inbox router into a fast, deterministic triage pipeline.
 
-- **[04 — I Used All Three JEV Primitives in One Workflow. Here’s What I Learned.](https://flyinghigherai.substack.com/p/i-used-all-three-jev-primitives-in)**  
-  An architectural deep-dive into combining all three structured decision primitives—**Choice** (categorical routing), **Score** (continuous urgency/priority evaluation), and **Check/Boolean** (policy and threshold verification)—inside a single multi-stage n8n workflow.
+- **<a href="https://flyinghigherai.substack.com/p/i-used-all-three-jev-primitives-in" target="_blank" rel="noopener noreferrer">04 — I Used All Three JEV Primitives in One Workflow. Here’s What I Learned ↗</a>**  
+  Combining binary gates, multi-class routing, and structured scoring inside a single end-to-end n8n automation—and how to design clean handoffs between decision primitives and downstream actions.
 
-- **[05 — Building a RAG Knowledge Base in n8n with Qdrant and JEV Nodes](https://flyinghigherai.substack.com/p/building-a-rag-knowledge-base-in)**  
-  Combining Retrieval-Augmented Generation (RAG) with deterministic decision gating. Covers vector ingestion and semantic search in **Qdrant**, coupled with **JEV** decision nodes to evaluate retrieval quality, gate hallucinations, and route customer or internal queries reliably.
+- **<a href="https://flyinghigherai.substack.com/p/building-a-rag-knowledge-base-in" target="_blank" rel="noopener noreferrer">05 — Building a RAG Knowledge Base in n8n with Qdrant and JEV Nodes ↗</a>**  
+  Architecting a production Retrieval-Augmented Generation (RAG) system using n8n, Qdrant Cloud vector storage, and `jev` decision gates to filter retrieval quality and prevent hallucinated answers.
 
-- **[06 — Jev Can See: TypeSafe's New Release Brings Images to the System One Model](https://flyinghigherai.substack.com/p/jev-can-see-typesafes-new-release)**  
-  Extending structured System-1 decision models from text to vision. Exploring multimodal classification, visual inspection, and fast, typed decision-making directly over image inputs without the latency or formatting fragility of large vision-language models.
+- **<a href="https://flyinghigherai.substack.com/p/jev-can-see-typesafes-new-release" target="_blank" rel="noopener noreferrer">06 — Jev Can See: TypeSafe's New Release Brings Images to the System One Model ↗</a>**  
+  Testing multimodal System-1 decision-making: passing visual inputs and images directly into `jev` nodes for fast, typed visual classification and routing inside automated workflows.
 
 👉 **Subscribe & read the full publication:** **[flyinghigherai.substack.com](https://flyinghigherai.substack.com/)**
 ---

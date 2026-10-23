@@ -319,7 +319,7 @@ general                → Slack #operations  (fallback)
 
 ## 📖 Related reading
 
-- **<a href="https://flyinghigherai.substack.com/p/i-thought-llms-could-handle-yesno" target="_blank" rel="noopener noreferrer">02 — I Thought LLMs Could Handle "Yes/No" Decisions. Here's What I Learned ↗</a>**  
+- **<a href="https://flyinghigherai.substack.com/p/i-thought-llms-could-handle-yesno" target="_blank" rel="noopener noreferrer">I Thought LLMs Could Handle "Yes/No" Decisions. Here's What I Learned ↗</a>**  
   A live case study of building a YES/NO review classifier for incoming business documents. Explores how temperature, prompt phrasing, and model choice change the result, why raw LLMs drift on binary classification, and why an evaluation set is non-negotiable.
 - [Project 01 — Document Intelligence Pipeline](../01-Document-Intelligence-Pipeline) — the eval-set discipline was built here first.
 

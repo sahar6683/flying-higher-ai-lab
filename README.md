@@ -69,14 +69,45 @@ flying-higher-ai-lab/
 │       └── DocumentAnalysisV4.sanitized.json
 │
 ├── 02-AI-Email-Intelligence-Routing-JEV/
-   ├── README.md                          ← deep-dive: v1 → v2 evolution
-   ├── diagrams/
-   │   ├── architecture-v2.mmd
-   │   └── routing-overview.mmd
-   └── workflows/
-       ├── AIEmailIntelligenceRouting.v1.sanitized.json
-       └── AIEmailIntelligenceRouting.v2.sanitized.json
-
+│   ├── README.md
+│   ├── diagrams/
+│   │   ├── architecture-v2.mmd
+│   │   └── routing-overview.mmd
+│   ├── assets/
+│   │   ├── workflow-v1.png
+│   │   └── workflow-v2.png
+│   └── workflows/
+│       ├── AIEmailIntelligenceRouting.v1.sanitized.json
+│       └── AIEmailIntelligenceRouting.v2.sanitized.json
+│
+├── 03-ai-purchase-request-routing-jev/
+│   ├── README.md
+│   ├── diagrams/
+│   │   └── architecture.mmd
+│   ├── workflows/
+│   │   └── workflow.sanitized.json
+│   └── screenshots/
+│       ├── workflow-overview.png
+│       ├── gmail-trigger-inbox.png
+│       ├── get-many-messages-redacted.png       ← personal emails redacted
+│       ├── jev-noul-check-missing-info.png
+│       ├── jev-noul-output-1.png … 4.png
+│       ├── jev-score-risk-assessment.png
+│       └── slack-channel-output.png
+│
+└── 04-rag-knowledge-base-qdrant-jev/
+    ├── README.md
+    ├── diagrams/
+    │   └── architecture.mmd
+    ├── workflows/
+    │   ├── workflow-a-ingestion.sanitized.json   ← Drive → Qdrant
+    │   ├── workflow-b-rag-baseline.sanitized.json ← Baseline RAG (no JEV)
+    │   └── workflow-b-v2-rag-with-jev.sanitized.json ← Production RAG with JEV grounding gate
+    └── screenshots/
+        ├── workflow-b-rag-baseline.png
+        ├── workflow-b-v2-with-jev.png
+        ├── support-question-sample-1.png
+        └── support-question-sample-2.png
 
 ```
 

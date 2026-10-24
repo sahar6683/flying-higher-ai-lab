@@ -1,12 +1,12 @@
 flowchart TD
-    A([Schedule Trigger]) --> B[Get row in sheet<br/>status=pending]
-    B --> C{HTTP - JEV Choice<br/>classify question type}
-    C -- account/policy/how_to --> P1[Qdrant retrieve top-k=5]
-    C -- other --> Z[Slack #human-review<br/>type unclear]
-    P1 --> D[Gemini 2.5 Pro<br/>draft reply from chunks]
-    D --> E{HTTP - JEV Score<br/>grounding 0-10}
-    D --> F{HTTP - JEV Noul<br/>answer grounded in chunks?}
-    E -- score>=7 --> G[Update row<br/>status=answered]
-    E -- score<7 --> H[Slack #human-review<br/>+ chunks attached]
-    F -- choice=yes --> G
-    F -- choice=no --> H
+    A(["Schedule Trigger"]) --> B["Get row(s) in sheet<br/>status=pending"]
+    B --> C{{"HTTP - JEV Choice<br/>classify question type"}}
+    C -->|"account / policy / how_to"| P1["Qdrant retrieve<br/>top-k=5"]
+    C -->|"other"| Z["Slack #human-review<br/>question type unclear"]
+    P1 --> D["Gemini 2.5 Pro<br/>draft reply from chunks"]
+    D --> E{{"HTTP - JEV Score<br/>grounding 0-10"}}
+    D --> F{{"HTTP - JEV Noul<br/>is answer grounded in chunks?"}}
+    E -->|"score >= 7"| G["Update row in sheet<br/>status=answered"]
+    E -->|"score < 7"| H["Slack #human-review<br/>+ retrieved chunks attached"]
+    F -->|"choice = yes"| G
+    F -->|"choice = no"| H

@@ -4,8 +4,6 @@
 
 This is **Project 03 in the Flying Higher AI Lab** portfolio. It picks up where **Project 02** left off: instead of *classifying* an inbound email by category and urgency, Project 03 *acts* on a request, applying the full JEV decision-model toolkit to a real business workflow.
 
-> **Related reading:** [Article 03 — "How Integrating JEV Made My Email Routing Faster and More Accurate"](#) (Substack) — and the full case study below.
-
 ---
 
 ## 🎯 The business problem
@@ -252,7 +250,5 @@ This sequencing — **gating → grading → routing** — is the pattern that m
 ---
 
 ## 📖 Related reading
-
-- **Article 03 — "How Integrating JEV Made My Email Routing Faster and More Accurate"** (Substack link).
-- **Project 02 — AI Email Intelligence & Routing (JEV)** — the classification-only predecessor that introduced the JEV approach.
-- **Article 02 — "I Thought LLMs Could Handle Yes/No Decisions"** — the failure mode that motivated switching to a typed decision model.
+- **<a href="https://flyinghigherai.substack.com/p/how-integrating-jev-made-my-email" target="_blank" rel="noopener noreferrer">03 — How Integrating JEV Made My Email Routing Faster and More Accurate ↗</a>**  
+  Replacing brittle multi-branch prompt chains with a structured System-1 decision model (`jev`). How typed classification criteria and confidence scores transformed a noisy inbox router into a fast, deterministic triage pipeline.

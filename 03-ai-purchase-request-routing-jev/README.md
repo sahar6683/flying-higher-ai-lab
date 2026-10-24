@@ -252,3 +252,6 @@ This sequencing — **gating → grading → routing** — is the pattern that m
 ## 📖 Related reading
 - **<a href="https://flyinghigherai.substack.com/p/how-integrating-jev-made-my-email" target="_blank" rel="noopener noreferrer">03 — How Integrating JEV Made My Email Routing Faster and More Accurate ↗</a>**  
   Replacing brittle multi-branch prompt chains with a structured System-1 decision model (`jev`). How typed classification criteria and confidence scores transformed a noisy inbox router into a fast, deterministic triage pipeline.
+
+- **<a href="https://flyinghigherai.substack.com/p/i-used-all-three-jev-primitives-in" target="_blank" rel="noopener noreferrer">04 — I Used All Three JEV Primitives in One Workflow. Here’s What I Learned ↗</a>**  
+  Combining binary gates, multi-class routing, and structured scoring inside a single end-to-end n8n automation—and how to design clean handoffs between decision primitives and downstream actions.

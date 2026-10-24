@@ -237,6 +237,6 @@ The pattern is *retrieval → draft → gate → ship-or-escalate*. Skipping the
 ---
 
 ## 📖 Related reading
+- **<a href="https://flyinghigherai.substack.com/p/building-a-rag-knowledge-base-in" target="_blank" rel="noopener noreferrer">05 — Building a RAG Knowledge Base in n8n with Qdrant and JEV Nodes ↗</a>**  
+  Architecting a production Retrieval-Augmented Generation (RAG) system using n8n, Qdrant Cloud vector storage, and `jev` decision gates to filter retrieval quality and prevent hallucinated answers.
 
-- **<a href="https://flyinghigherai.substack.com/p/i-used-all-three-jev-primitives-in" target="_blank" rel="noopener noreferrer">04 — I Used All Three JEV Primitives in One Workflow. Here’s What I Learned ↗</a>**  
-  Combining binary gates, multi-class routing, and structured scoring inside a single end-to-end n8n automation—and how to design clean handoffs between decision primitives and downstream actions.

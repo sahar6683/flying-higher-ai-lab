@@ -322,11 +322,9 @@ score <  7 → Slack #human-review (+ chunks attached)
 ---
 
 ## 📖 Related reading
+- **<a href="https://flyinghigherai.substack.com/p/building-a-rag-knowledge-base-in" target="_blank" rel="noopener noreferrer">05 — Building a RAG Knowledge Base in n8n with Qdrant and JEV Nodes ↗</a>**  
+  Architecting a production Retrieval-Augmented Generation (RAG) system using n8n, Qdrant Cloud vector storage, and `jev` decision gates to filter retrieval quality and prevent hallucinated answers.
 
-- [Article 02 — I Thought LLMs Could Handle Yes/No Decisions](../../articles/02-i-thought-llms-could-handle-yesno-decisions.md)
-- [Project 01 — Document Intelligence Pipeline](../01-document-intelligence-pipeline) — the eval-set discipline was built here first.
-- [Project 02 — AI Email Intelligence & Routing (JEV)](../02-ai-email-intelligence-routing-jev) — JEV `choice` + `score` in an email-routing context.
-- [Project 03 — AI Purchase Request Approval & Routing System](../03-ai-purchase-request-routing-jev) — all three JEV primitives in one workflow.
 
 ---
 

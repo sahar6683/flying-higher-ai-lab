@@ -1,0 +1,14 @@
+flowchart TD
+    A([Gmail Trigger<br/>poll unread]) --> B[Get many messages<br/>simplify, 200 max]
+    B --> C[Prepare Email<br/>id, from, subject, body]
+    C --> D[Gemini Chat Model<br/>draft polished summary]
+    C --> E{HTTP - JEV Noul<br/>missing-info check}
+    E -- choice=yes --> F[Flag for human review<br/>no further processing]
+    E -- choice=no --> G{HTTP - JEV Score<br/>risk assessment 0-10}
+    G -- score>=7 OR conf<=0.6 --> F
+    G -- safe --> H{HTTP - JEV Choice<br/>route to department}
+    H --> I1[Slack #purchasing]
+    H --> I2[Slack #finance]
+    H --> I3[Slack #billing]
+    H --> I4[Slack #operations]
+    H --> I5[Slack #human-review]

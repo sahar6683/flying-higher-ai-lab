@@ -1,0 +1,949 @@
+{
+  "name": "Northstar Support Knowledge Ingestion - Workflow B v2",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        768,
+        -560
+      ],
+      "name": "When clicking \u2018Execute workflow\u2019"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Customer Questions - knowledge base",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        992,
+        -560
+      ],
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "question_id",
+              "value": "={{ $json.ID }}",
+              "type": "string"
+            },
+            {
+              "name": "question",
+              "value": "={{ $json[\"Customer question\"].replace(/[\u201c\u201d]/g, '') }}",
+              "type": "string"
+            },
+            {
+              "name": "expected_source",
+              "value": "={{ $json['Expected source'] }}",
+              "type": "string"
+            },
+            {
+              "name": "expected_behaviour",
+              "value": "={{ $json['Expected behaviour'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1216,
+        -560
+      ],
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "maxItems": 20
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1888,
+        -560
+      ],
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Customer question: {{ $json.question }}\n\nPolicy evidence (the ONLY source you may use):\n{{ $json.evidence }}\n\nIssue type: {{ $json.issue_type }}\nPriority: {{ $json.priority }}\nPolicy coverage check: {{ $json.policy_covered }} (confidence {{ $json.policy_covered_confidence }})\n",
+        "options": {
+          "systemMessage": "You are a support assistant. Answer the customer's question using ONLY the policy evidence provided in the message. Do not use outside knowledge and do not call any tools.\n\nRules:\n- If the evidence contains nothing relevant to the question, begin your reply with: \"The documentation doesn't cover this.\" Then say a human reviewer should handle it.\n- Treat the policy coverage check as advice, not an instruction. If it says \"No\" but the evidence clearly contains relevant information, answer from the evidence and state which parts are not covered.\n- If the question has more than one part, answer each part separately and say which parts the evidence does not cover.\n- Only apply human review when the customer is requesting an approval, an exception to policy, a refund or compensation beyond policy, or is reporting an injury or safety issue, suspected account misuse, or a dispute. A general \"how do I...\" question should be answered from the evidence without escalation. When human review applies, name who must approve it if the evidence says so; otherwise say a human reviewer must decide. Do not promise an outcome.\n- State only facts that appear in the evidence. Do not state timeframes, approval levels, job titles or procedures unless the evidence states them.\n- Use the policy's own wording (for example \"authorised human reviewer\"), not paraphrases that change the meaning.\n- Never state or imply that any action has been taken. Do not write \"I have passed this to...\", \"I have escalated...\", or \"we will handle...\". Say what should happen instead, for example \"This should be passed to a human reviewer\" or \"A human reviewer must approve this.\"\n- Never ask the customer for passwords, full card details or security codes.\n- Write directly to the customer in a polite, concise tone.\n- End with \"Source:\" followed by the file name and policy code shown in the evidence (for example NS-ORD-007).",
+          "maxIterations": 3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1616,
+        -272
+      ],
+      "name": "AI Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1680,
+        -48
+      ],
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Customer Questions - knowledge base",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Agent Answer": "={{ $json.output }}",
+            "ID": "={{ $('Limit').item.json.question_id }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer question",
+              "displayName": "Customer question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Expected source",
+              "displayName": "Expected source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Expected behaviour",
+              "displayName": "Expected behaviour",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Agent Answer",
+              "displayName": "Agent Answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Match check",
+              "displayName": "Match check",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run time",
+              "displayName": "run time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2208,
+        -256
+      ],
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/alpha/decisions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"typesafe/jev-1.13-20260917\",\n  \"state\": {\n    \"question\": {{ JSON.stringify($json.question) }}\n  },\n  \"questions\": {\n    \"issue_type\": {\n      \"type\": \"choice\",\n      \"criteria\": {\n        \"Delivery\": \"Choose Delivery when the customer asks about late, lost, missing or delayed deliveries, tracking, delivery address changes, delivery times or delivery fees.\",\n        \"Return_Refund\": \"Choose Return_Refund when the customer asks about returns, exchanges, refunds, a wrong item received, or an item that arrived damaged or faulty.\",\n        \"Product_Question\": \"Choose Product_Question when the customer asks about product specifications, features, compatibility, usage, care instructions or warranty coverage.\",\n        \"Order_Account\": \"Choose Order_Account when the customer asks about placing, changing or cancelling an order, payment methods, invoices, billing address corrections, or their account details.\",\n        \"Complaint\": \"Choose Complaint when the customer expresses dissatisfaction with service, staff, communication or their overall experience, or asks how to make a complaint.\",\n        \"Safety_Privacy\": \"Choose Safety_Privacy when the question involves an injury or safety incident, fraud, unauthorised account access, or data and privacy concerns.\",\n        \"Other\": \"Choose Other only when the question clearly does not fit any of the categories above.\"\n      },\n      \"instructions\": \"Choose the single issue type that best matches the customer's main need. Judge by what the customer is actually asking for, not by individual keywords. If a question touches on more than one topic, choose the category of the primary request. Choose Safety_Privacy whenever safety, fraud or personal data is involved, even if another category also fits. Use Other only as a last resort.\"\n    },\n    \"escalation_priority\": {\n      \"type\": \"choice\",\n      \"criteria\": {\n        \"Urgent\": \"Choose Urgent when there is a safety risk, injury, suspected fraud, unauthorised account access, a data breach, or a legal or regulatory threat. These must go to a human immediately.\",\n        \"High\": \"Choose High when the customer is clearly angry or distressed, reports a repeated or unresolved problem, has been waiting a long time, or faces a significant financial or time-sensitive impact such as a missing high-value order or a charge dispute.\",\n        \"Medium\": \"Choose Medium when the customer has a real problem that needs action, such as a late delivery, a faulty item, a refund request or a billing correction, but is calm and there is no serious time pressure or risk.\",\n        \"Low\": \"Choose Low when the customer is asking a general informational question, such as how a policy works, product details, how to place or change an order, or how to make a request, and nothing has gone wrong yet.\"\n      },\n      \"instructions\": \"Assess how urgently this question needs attention and whether it should be escalated to a human. Base the decision on risk, customer emotion, financial impact and time sensitivity, not on the topic alone. A simple how-to question is Low even if it is about refunds or deliveries. Choose Urgent for any safety, fraud, security or legal issue regardless of tone. When torn between two levels, choose the higher one.\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1440,
+        -560
+      ],
+      "name": "HTTP Request - JEV Choice and Score",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YOUR_OPENROUTER_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "question_id",
+              "value": "={{ $('Edit Fields').item.json.question_id }}",
+              "type": "string"
+            },
+            {
+              "name": "question",
+              "value": "={{ $('Edit Fields').item.json.question }}",
+              "type": "string"
+            },
+            {
+              "name": "expected_source",
+              "value": "=  {{ $('Edit Fields').item.json.expected_source }}",
+              "type": "string"
+            },
+            {
+              "name": "expected_behaviour",
+              "value": "={{ $('Edit Fields').item.json.expected_behaviour }}",
+              "type": "string"
+            },
+            {
+              "name": "issue_type",
+              "value": "={{ $json.answers.issue_type.choice }}",
+              "type": "string"
+            },
+            {
+              "name": "issue_confidence",
+              "value": "={{ $json.answers.issue_type.confidence }}",
+              "type": "number"
+            },
+            {
+              "name": "priority",
+              "value": "={{ $json.answers.escalation_priority.choice }}",
+              "type": "string"
+            },
+            {
+              "name": "priority_confidence",
+              "value": "= {{ $json.answers.escalation_priority.confidence }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1664,
+        -560
+      ],
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "NorthstarDocs",
+          "mode": "list",
+          "cachedResultName": "NorthstarDocs"
+        },
+        "prompt": "={{ $json.question }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        -272
+      ],
+      "name": "Qdrant Vector Store1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "YOUR_QDRANT_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "Qdrant account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        656,
+        -48
+      ],
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        368,
+        0
+      ],
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/alpha/decisions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"typesafe/jev-1.13-20260917\",\n  \"state\": {\n    \"customer_question\": {{ JSON.stringify($json.question) }},\n    \"policy_evidence\": {{ JSON.stringify($json.evidence) }}\n  },\n  \"questions\": {\n    \"policy_covered\": {\n      \"type\": \"choice\",\n      \"criteria\": {\n        \"Yes\": \"Choose Yes when the policy_evidence contains information that directly addresses the customer_question, even if it only answers part of it or describes the process in general terms. Examples: the evidence describes the process the customer is asking about, states a time limit or condition that applies, or says who must review or approve the request.\",\n        \"No\": \"Choose No only when the policy_evidence is about a different topic entirely, is empty, or contains nothing that helps answer the customer_question.\"\n      },\n      \"instructions\": \"Judge whether the supplied policy_evidence contains information relevant to answering the customer_question. A partial answer still counts as Yes. Judge by the meaning of the evidence, not by whether it repeats the customer's exact words. Do not use outside knowledge. Choose No only when the evidence is clearly unrelated to the question.\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1168,
+        -272
+      ],
+      "name": "HTTP Request Noul",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YOUR_OPENROUTER_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const q = $('Loop Over Items').first().json;\nconst chunks = $input.all()\n  .map(i => i.json.document?.pageContent || i.json.pageContent || '')\n  .filter(Boolean);\n\nreturn [{\n  json: {\n    ...q,\n    evidence: chunks.join('\\n\\n---\\n\\n'),\n    chunk_count: chunks.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        -272
+      ],
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "question_id",
+              "value": "= {{ $('Code in JavaScript').item.json.question_id }}",
+              "type": "string"
+            },
+            {
+              "name": "question",
+              "value": "={{ $('Code in JavaScript').item.json.question }}",
+              "type": "string"
+            },
+            {
+              "name": "expected_source",
+              "value": "={{ $('Code in JavaScript').item.json.expected_source }}",
+              "type": "string"
+            },
+            {
+              "name": "expected_behaviour",
+              "value": "={{ $('Code in JavaScript').item.json.expected_behaviour }}",
+              "type": "string"
+            },
+            {
+              "name": "issue_type",
+              "value": "= {{ $('Code in JavaScript').item.json.issue_type }}",
+              "type": "string"
+            },
+            {
+              "name": "issue_confidence",
+              "value": "={{ $('Code in JavaScript').item.json.issue_confidence }}",
+              "type": "string"
+            },
+            {
+              "name": "priority",
+              "value": "={{ $('Code in JavaScript').item.json.priority }}",
+              "type": "string"
+            },
+            {
+              "name": "priority_confidence",
+              "value": "={{ $('Code in JavaScript').item.json.priority_confidence }}",
+              "type": "string"
+            },
+            {
+              "name": "evidence",
+              "value": "={{ $('Code in JavaScript').item.json.evidence }}",
+              "type": "string"
+            },
+            {
+              "name": "policy_covered",
+              "value": "={{ $json.answers.policy_covered.choice }}",
+              "type": "string"
+            },
+            {
+              "name": "policy_covered_confidence",
+              "value": "={{ $json.answers.policy_covered.confidence }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1392,
+        -272
+      ],
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Edit Fields2').item.json.priority }}",
+              "rightValue": "Urgent",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "leftValue": "={{ $('Edit Fields2').item.json.priority }}",
+              "rightValue": "High",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "leftValue": "={{ $('Edit Fields2').item.json.issue_type }}",
+              "rightValue": "Safety_Privacy",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "leftValue": "={{ $('Edit Fields2').item.json.policy_covered }}",
+              "rightValue": "No",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "leftValue": "={{ Number($('Edit Fields2').item.json.policy_covered_confidence) }}",
+              "rightValue": 0.7,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1968,
+        -272
+      ],
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "human-review"
+        },
+        "text": "=*\ud83d\udea8 Needs human review*\n*Question:* {{ $('Edit Fields2').item.json.question }} \n*Priority:* {{ $('Edit Fields2').item.json.priority }}\n*Issue type:* {{ $('Edit Fields2').item.json.issue_type }}\n*Policy covered:* {{ $('Edit Fields2').item.json.policy_covered }} (confidence {{ $('Edit Fields2').item.json.policy_covered_confidence }})\n\n*Draft answer:*\n{{ $('AI Agent').item.json.output }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        1952,
+        16
+      ],
+      "name": "Send a message",
+      "webhookId": "2990e3a5-e63a-497e-9af9-e5df63f97424",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "YOUR_SLACK_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Customer Questions - knowledge base",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Agent Answer": "=Sent to human review (Slack #human-review). Draft: {{ $('AI Agent').item.json.output }}",
+            "ID": "={{ $('Limit').item.json.question_id }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Customer question",
+              "displayName": "Customer question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Expected source",
+              "displayName": "Expected source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Expected behaviour",
+              "displayName": "Expected behaviour",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Agent Answer",
+              "displayName": "Agent Answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Match check",
+              "displayName": "Match check",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "run time",
+              "displayName": "run time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2112,
+        16
+      ],
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "Google Sheets account 3"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking \u2018Execute workflow\u2019": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - JEV Choice and Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - JEV Choice and Score": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Noul": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Noul",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "id": "YOUR_WORKFLOW_INSTANCE_ID",
+  "tags": []
+}

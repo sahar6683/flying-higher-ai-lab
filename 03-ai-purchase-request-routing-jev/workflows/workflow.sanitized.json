@@ -1,0 +1,901 @@
+{
+  "name": "AI Purchase Request Approval & Routing System",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        720,
+        -768
+      ],
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 30,
+        "simple": false,
+        "filters": {
+          "q": "subject:\"purchase request\" OR subject:\"purchase\" OR subject:\"buy\" OR subject:\"acquisition\""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        944,
+        -768
+      ],
+      "name": "Get many messages",
+      "webhookId": "c286ebc8-07ec-48e4-b72a-f46d77a32e67",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.missing_count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1840,
+        -768
+      ],
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const answers = $json.answers;\n\nconst missingFields = [];\n\nif (answers.missing_quantity?.noul >= 0.5) {\n  missingFields.push(\"quantity\");\n}\n\nif (answers.missing_budget?.noul >= 0.5) {\n  missingFields.push(\"estimated budget\");\n}\n\nif (answers.missing_required_by?.noul >= 0.5) {\n  missingFields.push(\"required-by date\");\n}\n\n// Create readable text\nlet missingText = \"\";\n\nif (missingFields.length === 1) {\n  missingText = missingFields[0];\n} else if (missingFields.length === 2) {\n  missingText = `${missingFields[0]} and ${missingFields[1]}`;\n} else if (missingFields.length === 3) {\n  missingText = `${missingFields[0]}, ${missingFields[1]}, and ${missingFields[2]}`;\n}\n\nreturn {\n  json: {\n    ...$json,\n    missing_count: missingFields.length,\n    missing_fields: missingFields,\n    missing_text: missingText\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        -768
+      ],
+      "name": "Code in JavaScript - Build Missing Info"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are helping the purchasing team review incoming purchase requests.\n\nPurchase request subject:\n{{ $('Get many messages').item.json.subject }}\nEmail Text: \n{{ $('Get many messages').item.json.text }}\nA purchase request is missing the following information:\n{{ $json.missing_fields }}\n\nWrite a short, professional Slack message for the purchasing team.\n\nThe message should:\n- identify the purchase request using the subject\n- clearly state what information is missing\n- if more than one item is missing, mention all of them\n- ask the requester to provide the missing information\n- keep the message concise\n- not invent any information\n- not mention JEV, AI, or this workflow",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2064,
+        -992
+      ],
+      "name": "Basic LLM Chain - Draft Slack Message"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2144,
+        -768
+      ],
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "subject ",
+              "value": "={{ $json.subject }}",
+              "type": "string"
+            },
+            {
+              "name": "sender",
+              "value": "={{ $json.from.text }}",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1168,
+        -768
+      ],
+      "name": "Edit Fields - Prepare Email for JEV"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "human-review"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        2416,
+        -880
+      ],
+      "name": "Send a message",
+      "webhookId": "75f215eb-1c6f-497c-a15f-a8f6a42cb2ae",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "YOUR_SLACK_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/alpha/decisions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_OPENROUTER_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"typesafe/jev-1.13\",\n  \"state\": {\n    \"subject\": {{ JSON.stringify($json.subject) }},\n    \"sender\": {{ JSON.stringify($json.from.text) }},\n    \"body\": {{ JSON.stringify($json.text) }}\n  },\n  \"questions\": {\n    \"missing_quantity\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Determine whether the quantity of items being requested is missing from this purchase request. Answer true if the email does not clearly state how many items are being requested. Answer false if the email clearly states the quantity of the requested items.\"\n    },\n    \"missing_budget\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Determine whether the estimated budget or cost is missing from this purchase request. Answer true if the email does not provide an estimated cost, price, budget, or monetary amount. Answer false if the email provides an estimated cost, price, budget, or monetary amount.\"\n    },\n    \"missing_required_by\": {\n      \"type\": \"noul\",\n      \"instructions\": \"Determine whether the required-by date is missing from this purchase request. Answer true if the email does not clearly state when the requested items are needed. Answer false if the email clearly states a required-by date or a clear date by which the items are needed.\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1392,
+        -768
+      ],
+      "name": "HTTP Request - JEV Noul- check missing info",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YOUR_OPENROUTER_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/alpha/decisions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_OPENROUTER_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"typesafe/jev-1.13-20260917\",\n  \"state\": {\n    \"subject\": {{ JSON.stringify($('Edit Fields - Prepare Email for JEV').item.json.subject) }},\n    \"sender\": {{ JSON.stringify($('Edit Fields - Prepare Email for JEV').item.json.sender) }},\n    \"body\": {{ JSON.stringify($('Edit Fields - Prepare Email for JEV').item.json.body) }}\n  },\n  \"questions\": {\n    \"business_impact\": {\n      \"type\": \"score\",\n      \"criteria\": [\n        \"Routine purchase: normal business purchase with no unusual, sensitive, ambiguous, or meaningful risk. No strong reason for human review.\",\n        \"Human review warranted: purchase contains something unusual, sensitive, ambiguous, potentially risky, or consequential, including privacy, security, legal, financial, operational, or reputational concerns.\"\n      ],\n      \"instructions\": \"Score this purchase request from 0 to 10 based on how strongly it warrants human review. A routine purchase with no meaningful concerns should receive a score below 7. A purchase that is unusual, sensitive, potentially risky, ambiguous, or consequential enough to require human judgment should receive a score above 7. Focus on the nature of the purchase and any unusual or sensitive elements, not simply its price. An ordinary purchase should not receive a high score merely because it is expensive.\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2128,
+        -592
+      ],
+      "name": "HTTP Request - check potential risks JEV Score",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YOUR_OPENROUTER_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "subject",
+              "value": "={{ $('Get many messages').item.json.subject }}",
+              "type": "string"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('Get many messages').item.json.text }}",
+              "type": "string"
+            },
+            {
+              "name": "sender",
+              "value": "={{ $('Get many messages').item.json.from }}",
+              "type": "object"
+            },
+            {
+              "name": "answers.business_impact.probabilities['1']",
+              "value": "={{ $json.answers.business_impact.probabilities['1'] }}",
+              "type": "number"
+            },
+            {
+              "name": "answers.business_impact.probabilities['0']",
+              "value": "={{ $json.answers.business_impact.probabilities['0'] }}",
+              "type": "number"
+            },
+            {
+              "name": "answers.business_impact.confidence",
+              "value": "={{ $json.answers.business_impact.confidence }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2416,
+        -592
+      ],
+      "name": "Edit Fields - Show Purchase Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.answers.business_impact.probabilities[1] }}",
+              "rightValue": 0.5,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2640,
+        -592
+      ],
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are helping the purchasing team review potentially risky purchase requests.\n\nStart the Slack message with exactly:\n\n\u26a0\ufe0f Potential risky purchase request\n\nPurchase request subject:\n \n{{ $('Edit Fields - Show Purchase Request').item.json.subject }}\nEmail text:\n {{ $('Edit Fields - Show Purchase Request').item.json.text }}\nWrite a short, professional Slack message for the purchasing team.\n\nThe message should:\n- start with \"\u26a0\ufe0f Potential risky purchase request\"\n- clearly identify the purchase request using the subject\n- include the full original email text\n- briefly explain why the purchase request may warrant human review\n- focus on unusual, sensitive, privacy, security, legal, financial, operational, or reputational concerns that are actually present in the email\n- do not assume or invent risks that are not supported by the email\n- keep the explanation concise\n- do not mention JEV, AI, or this workflow\n- do not recommend whether the purchase should be approved or rejected; simply explain why human review is warranted",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2864,
+        -928
+      ],
+      "name": "Basic LLM Chain - Draft Slack Message1"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2944,
+        -704
+      ],
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "human-review"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        3216,
+        -816
+      ],
+      "name": "Send a message1",
+      "webhookId": "75f215eb-1c6f-497c-a15f-a8f6a42cb2ae",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "YOUR_SLACK_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/alpha/decisions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_OPENROUTER_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"typesafe/jev-1.13-20260917\",\n  \"state\": {\n    \"subject\": {{ JSON.stringify($json.subject) }},\n    \"sender\": {{ JSON.stringify($json.sender.text) }},\n    \"body\": {{ JSON.stringify($json.text) }}\n  },\n  \"questions\": {\n    \"department\": {\n      \"type\": \"choice\",\n      \"criteria\": {\n        \"Operations\": \"Choose Operations when the purchase is primarily for general office operations, workplace facilities, office equipment, furniture, maintenance, employee workplace needs, or administrative operations.\",\n        \"Finance\": \"Choose Finance when the purchase is primarily for accounting, financial management, budgeting, financial reporting, financial analysis, or software and services specifically used by the Finance department.\",\n        \"Billing\": \"Choose Billing when the request is primarily about invoices, payments, billing, accounts payable, payment processing, invoice processing, or resolving a billing-related issue.\",\n        \"Purchasing\": \"Choose Purchasing when the request is primarily about procurement itself, such as sourcing goods or services from suppliers, purchasing supplies or inventory, obtaining supplier quotes, managing vendors, or other procurement activities that do not have a more specific Finance, Billing, or Operations purpose.\"\n      },\n      \"instructions\": \"Choose the single department that should handle this request. Classify the request based on the primary business purpose of the purchase and what the purchased item or service will be used for. Do not classify it simply as Purchasing because the email is a purchase request. For example, a purchase of office equipment or workplace furniture belongs to Operations; accounting or financial reporting software belongs to Finance; an invoice or payment-related purchase issue belongs to Billing; and supplier sourcing, procurement, vendor, or purchasing activities belong to Purchasing. Use the email subject and body together. Do not choose a department based only on the sender.\"\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2928,
+        -528
+      ],
+      "name": "HTTP Request - JEV choice-route emails to specific slack channels",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YOUR_OPENROUTER_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3216,
+        -400
+      ],
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.answers.department.choice }}",
+                    "rightValue": "Purchasing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.answers.department.choice }}",
+                    "rightValue": "Finance",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "= {{ $json.answers.department.choice }} ",
+                    "rightValue": "=Billing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.answers.department.choice }}",
+                    "rightValue": "Operations",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        3440,
+        -432
+      ],
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "purchasing"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        3664,
+        -832
+      ],
+      "name": "Send a message2",
+      "webhookId": "75f215eb-1c6f-497c-a15f-a8f6a42cb2ae",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "YOUR_SLACK_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "finance"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        3664,
+        -640
+      ],
+      "name": "Send a message3",
+      "webhookId": "75f215eb-1c6f-497c-a15f-a8f6a42cb2ae",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "YOUR_SLACK_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "billing"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        3664,
+        -448
+      ],
+      "name": "Send a message4",
+      "webhookId": "75f215eb-1c6f-497c-a15f-a8f6a42cb2ae",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "YOUR_SLACK_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "operations"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        3664,
+        -256
+      ],
+      "name": "Send a message5",
+      "webhookId": "75f215eb-1c6f-497c-a15f-a8f6a42cb2ae",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "YOUR_SLACK_YOUR_SLACK_CHANNEL_ID_ID",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields - Prepare Email for JEV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain - Draft Slack Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request - check potential risks JEV Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript - Build Missing Info": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain - Draft Slack Message",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields - Prepare Email for JEV": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - JEV Noul- check missing info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain - Draft Slack Message": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - JEV Noul- check missing info": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript - Build Missing Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - check potential risks JEV Score": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields - Show Purchase Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields - Show Purchase Request": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain - Draft Slack Message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request - JEV choice-route emails to specific slack channels",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain - Draft Slack Message1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain - Draft Slack Message1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - JEV choice-route emails to specific slack channels": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "id": "YOUR_WORKFLOW_INSTANCE_ID",
+  "tags": []
+}

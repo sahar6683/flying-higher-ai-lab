@@ -43,9 +43,8 @@ Six rules govern every project in this lab:
 |---|---------|-------|--------|----------------|
 | 01 | [Document Intelligence Pipeline](./01-Document-Intelligence-Pipeline) | n8n · Gemini · OpenRouter · PDF.co · Drive · Gmail | ✅ V2 · V3 · V4 shipped | Why naive AI automation breaks at scale; structured output parsing vs deterministic Code-node aggregation; LLM eval set as a first-class artifact. |
 | 02 | [AI Email Intelligence & Routing (Jev)](./02-AI-Email-Intelligence-Routing-JEV) | n8n · OpenRouter · Jev · Gmail · Slack · Sheets | ✅ v1 · v2 shipped | Why LLMs are bad at deterministic yes/no; replace LLM adjudication with a typed decision model; confidence + urgency gating; human escalation vs automated multi-channel routing. |
-| 03 | RAG Knowledge Assistant | Python · embeddings · vector store · n8n bridge | 🟡 planned | Same engineering discipline applied to retrieval — eval set, chunking strategy, observability. |
-| 04 | Agentic Workflow Orchestrator | Python · tool-use · planning loop · n8n hit-points | 🟡 planned | The next leap: bounded agents with explicit tool contracts, deterministic checkpoints and audit trails. |
-| 05 | … | — | ⚪ backlog | Tell me what business problem you'd like to see solved next. |
+| 03 | [AI Purchase Request Approval & Routing System](./03-ai-purchase-request-routing-jev) | n8n · OpenRouter · JEV (noul + score + choice) · Gmail · Gemini · Slack | ✅ Live | All three JEV primitives in one workflow: `noul` for missing-info gate, `score` for risk gate, `choice` for department routing — plus Gemini-drafted Slack messages. |
+| 04 | [Northstar Support RAG Knowledge Base (Qdrant + JEV)](./04-rag-knowledge-base-qdrant-jev) | n8n · Qdrant · OpenAI embeddings · Gemini 2.5 Pro · OpenRouter · JEV · Sheets · Slack | ✅ Live | Three-stage evolution: Drive→Qdrant ingestion, baseline RAG, and production RAG with **JEV grounding gate** + Slack escalation. Zero hallucinated answers shipped to users. |
 
 ---
 

@@ -4,8 +4,6 @@
 
 This is **Project 04 in the Flying Higher AI Lab** portfolio. It moves the lab from "LLM in a loop" to **retrieval-augmented generation with typed decision gates** — answering real Northstar support questions against an internal knowledge base, with a hard safety net for questions the knowledge base can't actually answer.
 
-> **Related reading:** [Article 04 — "Building a RAG Knowledge Base in n8n with Qdrant and JEV Nodes"](#) (Substack) — and the full case study below.
-
 ---
 
 ## 🎯 The business problem
@@ -240,6 +238,5 @@ The pattern is *retrieval → draft → gate → ship-or-escalate*. Skipping the
 
 ## 📖 Related reading
 
-- **Article 04 — "Building a RAG Knowledge Base in n8n with Qdrant and JEV Nodes"** (Substack link).
-- **Project 03 — AI Purchase Request Approval & Routing System** — uses the same JEV toolkit (`noul` / `score` / `choice`) on a non-RAG workflow.
-- **Project 02 — AI Email Intelligence & Routing (JEV)** — the classification-only predecessor that introduced JEV.
+- **<a href="https://flyinghigherai.substack.com/p/i-used-all-three-jev-primitives-in" target="_blank" rel="noopener noreferrer">04 — I Used All Three JEV Primitives in One Workflow. Here’s What I Learned ↗</a>**  
+  Combining binary gates, multi-class routing, and structured scoring inside a single end-to-end n8n automation—and how to design clean handoffs between decision primitives and downstream actions.

@@ -91,7 +91,6 @@ flowchart LR
 
 > The benchmark collection name and dimension size are matched in Workflow 2's `Embeddings OpenAI` node where `dimensions = 768`.
 
-![Architecture overview](screenshots/03-processing-workflow-overview.png)
 ![WordPress → webhook intake](screenshots/01-intake-webhook-wordpress.png)
 
 ---
@@ -142,27 +141,21 @@ The result is written twice for durability:
 - **Google Sheets** (`NorthstarEmails`) — for the human team dashboard.
 - **n8n Data Table** (`Northstar_Cases`) — as the system of record with `case_id` as primary key.
 
-![Vision inspection branch](screenshots/05-processing-vision-image-inspection.png)
-![LLM chain + structured output](screenshots/06-processing-llm-chain-structured-output.png)
-![Sheet + Data Table update](screenshots/07-processing-update-sheet-and-datatable.png)
 
 ---
 
 ## 📊 The Embedding Benchmark deep-dive
 
 The benchmark lives in Google Colab and re-indexes the same 50 customer queries against the same Northstar policy chunks. The metric is **Hit@K** — did the ground-truth primary policy appear in the Top-K results?
+> The exact figures below are reproduced verbatim from the published Substack writeup (*"What I Learned Benchmarking EmbeddingGemma Against OpenAI's Embedding Model"*) and from the **CORRECTED BENCHMARK COMPARISON WITH DOC_MAP (50 QUERIES)** screenshot. These are the only five configurations actually benchmarked — no row has been interpolated, averaged, or inferred.
 
 | Embedding model | Dim | Hit@1 | Hit@3 | Hit@5 | Avg embed ms | Avg search ms | Notes |
 |---|---|---|---|---|---|---|---|
-| OpenAI `text-embedding-3-small` | **1536** | 38 % | 70 % | 78 % | 387.79 | 4.21 | Native OpenAI size. |
-| OpenAI `text-embedding-3-small` | **768** (Matryoshka) | 50 % | 80 % | 86 % | 198.50 | 2.80 | Truncated mid-vector. |
-| OpenAI `text-embedding-3-small` | **512** (Matryoshka) | 48 % | 82 % | 84 % | 132.40 | 2.10 | |
-| OpenAI `text-embedding-3-small` | **256** (Matryoshka) | 40 % | 74 % | 80 % | 71.20 | 1.40 | |
-| OpenAI `text-embedding-3-small` | **128** (Matryoshka) | 26 % | 56 % | 64 % | 39.80 | 0.95 | |
-| Google `EmbeddingGemma-300M` | **768** (native) | **66 %** | **88 %** | **94 %** | **86.56** | 2.05 | **Production winner.** |
-| Google `EmbeddingGemma-300M` | **512** (Matryoshka) | 64 % | 90 % | 96 % | 64.20 | 1.60 | Best Hit@5. |
-| Google `EmbeddingGemma-300M` | **256** (Matryoshka) | 68 % | 90 % | 92 % | 38.50 | 1.10 | Best Hit@1. |
-| Google `EmbeddingGemma-300M` | **128** (Matryoshka) | 42 % | 70 % | 80 % | 22.10 | 0.75 | |
+| OpenAI `text-embedding-3-small` | **1536** (native) | 38.0 % | 70.0 % | 78.0 % | 387.79 | 0.01 | Native OpenAI size. |
+| Google `EmbeddingGemma-300M` | **768** (native) | **66.0 %** | **86.0 %** | **94.0 %** | **86.56** | 0.01 | **Production winner.** |
+| Google `EmbeddingGemma-300M` | **512** (Matryoshka) | 60.0 % | 84.0 % | **96.0 %** | 86.56 | 0.01 | Best Hit@5. |
+| Google `EmbeddingGemma-300M` | **256** (Matryoshka) | **68.0 %** | 82.0 % | 92.0 % | 86.56 | 0.01 | Best Hit@1. |
+| Google `EmbeddingGemma-300M` | **128** (Matryoshka) | 54.0 % | 80.0 % | 88.0 % | 86.56 | 0.01 | |
 
 > Numbers reproduced from Article 1 — *"What I Learned Benchmarking EmbeddingGemma Against OpenAI's Embedding Model"*. They are the exact figures cited in the published Substack writeup.
 
@@ -175,9 +168,7 @@ The benchmark lives in Google Colab and re-indexes the same 50 customer queries 
 The Cosine-similarity inspection (the "0.64 is a strong hit in this asymmetric domain") is what taught the workflow to use `top-k = 4`: enough slots for the **primary** policy (Returns, Late Delivery, Damaged Goods) **plus** a **secondary** policy (Approvals Matrix, Holiday Extension, etc.) to land in the same LLM context window.
 
 ![Matryoshka concept](screenshots/12-matryoshka-dolls-concept.png)
-![Top-K retrieval comparison](screenshots/09-benchmark-topk-hits-comparison.png)
-![Cosine similarity inspection](screenshots/08-benchmark-cosine-similarity-inspection.png)
-![Benchmark summary table](screenshots/13-benchmark-summary-table.png)
+
 
 ---
 
@@ -208,21 +199,7 @@ The Cosine-similarity inspection (the "0.64 is a strong hit in this asymmetric d
 ├── eval/
 │   └── (Hit@K + latency tables live here)
 └── screenshots/
-    ├── 01-intake-webhook-wordpress.png
-    ├── 02-intake-get-from-webhook.png
-    ├── 03-processing-workflow-overview.png
-    ├── 04-processing-qdrant-retrieval.png
-    ├── 05-processing-vision-image-inspection.png
-    ├── 06-processing-llm-chain-structured-output.png
-    ├── 07-processing-update-sheet-and-datatable.png
-    ├── 08-benchmark-cosine-similarity-inspection.png
-    ├── 09-benchmark-topk-hits-comparison.png
-    ├── 10-benchmark-matryoshka-truncation.png
-    ├── 11-benchmark-dimension-vs-accuracy.png
-    ├── 12-matryoshka-dolls-concept.png
-    ├── 13-benchmark-summary-table.png
-    ├── 14-benchmark-table-upscaled.png
-    └── 15-processing-workflow-walkthrough.mp4
+ 
 ```
 
 ---
@@ -305,10 +282,8 @@ For Northstar's data that was **768d + top-k = 4**. For a longer-form legal-corp
 
 ## 📖 Related reading
 
-- *What I Learned Benchmarking EmbeddingGemma Against OpenAI's Embedding Model* (Substack, October 2026) — the full benchmark writeup with the table reproduced above.
-- *Beyond the Vector Space: Building an Auditable, Multimodal Customer Ops Pipeline in n8n* (Substack, October 2026) — the architecture writeup that turned the Colab benchmark into the live n8n pipeline.
-- Project 04 in this lab — `04-rag-knowledge-base-qdrant-jev` — provides the ingestion half (Workflow A → Qdrant) that Workflow 2 here queries.
-
+- **<a href="https://flyinghigherai.substack.com/p/what-i-learned-benchmarking-embeddinggemma" target="_blank" rel="noopener noreferrer">07 — What I Learned Benchmarking EmbeddingGemma Against OpenAI’s Embedding Model ↗</a>**  
+Before locking in an embedding model for my Customer Ops RAG pipeline, I pitted EmbeddingGemma 2 against OpenAI in Google Colab. The open-weight newcomer won by a landslide.
 ---
 
 ## 🧰 Tech & tools used in this project

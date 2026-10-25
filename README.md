@@ -45,7 +45,7 @@ Six rules govern every project in this lab:
 | 02 | [AI Email Intelligence & Routing (Jev)](./02-AI-Email-Intelligence-Routing-JEV) | n8n · OpenRouter · Jev · Gmail · Slack · Sheets | ✅ v1 · v2 shipped | Why LLMs are bad at deterministic yes/no; replace LLM adjudication with a typed decision model; confidence + urgency gating; human escalation vs automated multi-channel routing. |
 | 03 | [AI Purchase Request Approval & Routing System](./03-ai-purchase-request-routing-jev) | n8n · OpenRouter · JEV (noul + score + choice) · Gmail · Gemini · Slack | ✅ Live | All three JEV primitives in one workflow: `noul` for missing-info gate, `score` for risk gate, `choice` for department routing — plus Gemini-drafted Slack messages. |
 | 04 | [Northstar Support RAG Knowledge Base (Qdrant + JEV)](./04-rag-knowledge-base-qdrant-jev) | n8n · Qdrant · OpenAI embeddings · Gemini 2.5 Pro · OpenRouter · JEV · Sheets · Slack | ✅ Live | Three-stage evolution: Drive→Qdrant ingestion, baseline RAG, and production RAG with **JEV grounding gate** + Slack escalation. Zero hallucinated answers shipped to users. |
-
+| 05 | [Intelligent Customer Operations (Multimodal RAG)](./05-intelligent-customer-ops-multimodal-rag) | n8n · Qdrant · OpenAI embeddings · OpenAI Vision (gpt-5-mini) · Gemini · Sheets · Data Tables | ✅ Live | End-to-end auditable multimodal RAG: photo inspection **before** policy eval, structured 4-bucket triage, full audit trail in Sheets + Data Tables. Companion Matryoshka benchmark (OpenAI vs EmbeddingGemma 2 at 768/512/256/128d) justifies the production `top-k=4, dimensions=768` choice. |
 ---
 
 ## 📁 Repository layout
@@ -95,19 +95,48 @@ flying-higher-ai-lab/
 │       ├── jev-score-risk-assessment.png
 │       └── slack-channel-output.png
 │
-└── 04-rag-knowledge-base-qdrant-jev/
-    ├── README.md
+├── 04-rag-knowledge-base-qdrant-jev/
+│   ├── README.md
+│   ├── diagrams/
+│   │   └── architecture.mmd
+│   ├── workflows/
+│   │   ├── workflow-a-ingestion.sanitized.json   ← Drive → Qdrant
+│   │   ├── workflow-b-rag-baseline.sanitized.json ← Baseline RAG (no JEV)
+│   │   └── workflow-b-v2-rag-with-jev.sanitized.json ← Production RAG with JEV grounding gate
+│   └── screenshots/
+│       ├── workflow-b-rag-baseline.png
+│       ├── workflow-b-v2-with-jev.png
+│       ├── support-question-sample-1.png
+│       └── support-question-sample-2.png
+│
+└── 05-intelligent-customer-ops-multimodal-rag/
+    ├── README.md                          ← deep-dive: multimodal RAG + Matryoshka benchmark
     ├── diagrams/
     │   └── architecture.mmd
     ├── workflows/
-    │   ├── workflow-a-ingestion.sanitized.json   ← Drive → Qdrant
-    │   ├── workflow-b-rag-baseline.sanitized.json ← Baseline RAG (no JEV)
-    │   └── workflow-b-v2-rag-with-jev.sanitized.json ← Production RAG with JEV grounding gate
+    │   ├── intake-of-queries.sanitized.json           ← WordPress → webhook → Drive → Sheets
+    │   └── processing-multimodal-rag.sanitized.json   ← Qdrant retrieve → Vision inspect → LLM eval → structured output
+    ├── data/
+    │   ├── northstar-cases-sample.csv
+    │   └── northstar-retrieval-test-dataset.csv
+    ├── eval/
+    │   └── (Hit@K + latency tables live here)
     └── screenshots/
-        ├── workflow-b-rag-baseline.png
-        ├── workflow-b-v2-with-jev.png
-        ├── support-question-sample-1.png
-        └── support-question-sample-2.png
+        ├── 01-intake-webhook-wordpress.png
+        ├── 02-intake-get-from-webhook.png
+        ├── 03-processing-workflow-overview.png
+        ├── 04-processing-qdrant-retrieval.png
+        ├── 05-processing-vision-image-inspection.png
+        ├── 06-processing-llm-chain-structured-output.png
+        ├── 07-processing-update-sheet-and-datatable.png
+        ├── 08-benchmark-cosine-similarity-inspection.png
+        ├── 09-benchmark-topk-hits-comparison.png
+        ├── 10-benchmark-matryoshka-truncation.png
+        ├── 11-benchmark-dimension-vs-accuracy.png
+        ├── 12-matryoshka-dolls-concept.png
+        ├── 13-benchmark-summary-table.png
+        ├── 14-benchmark-table-upscaled.png
+        └── 15-processing-workflow-walkthrough.mp4
 
 ```
 
@@ -173,6 +202,9 @@ Every system in this repository is paired with a deep-dive engineering case stud
 
 - **<a href="https://flyinghigherai.substack.com/p/jev-can-see-typesafes-new-release" target="_blank" rel="noopener noreferrer">06 — Jev Can See: TypeSafe's New Release Brings Images to the System One Model ↗</a>**  
   Testing multimodal System-1 decision-making: passing visual inputs and images directly into `jev` nodes for fast, typed visual classification and routing inside automated workflows.
+
+- **<a href="https://flyinghigherai.substack.com/p/what-i-learned-benchmarking-embeddinggemma" target="_blank" rel="noopener noreferrer">07 — What I Learned Benchmarking EmbeddingGemma Against OpenAI ↗</a>**  
+  Head-to-head retrieval benchmark of Google’s open-weight EmbeddingGemma 2 vs OpenAI’s `text-embedding-3-small` over a 50-query customer-ops test set in Google Colab. Documents how Matryoshka truncation (768 / 512 / 256 / 128 dimensions) holds accuracy while cutting storage by up to two-thirds — and why retrieval misses are usually a chunking problem, not a model problem.
 
 👉 **Subscribe & read the full publication:** **[flyinghigherai.substack.com](https://flyinghigherai.substack.com/)**
 ---

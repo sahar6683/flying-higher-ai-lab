@@ -1,0 +1,98 @@
+%% Northstar Intelligent Customer Operations - End-to-end Architecture
+%% GitHub-safe Mermaid: double-quoted node labels, pipe edge labels.
+flowchart TB
+    %% ========== SOURCES ==========
+    subgraph SRC["Customer Surface"]
+        WP["WordPress Contact Form<br/>name, email, order_number,<br/>category_hint, description, your-photo"]
+    end
+
+    %% ========== WORKFLOW 1: INTAKE ==========
+    subgraph W1["Workflow 1 — Intake of Queries"]
+        direction TB
+        W1A["Webhook<br/>POST /northstar-intake"]
+        W1B["HTTP Request<br/>download your-photo URL"]
+        W1C["Google Drive<br/>Upload file to /Northstar folder"]
+        W1D["Google Sheets<br/>Append row -> NorthstarEmails"]
+        W1A --> W1B --> W1C --> W1D
+    end
+
+    %% ========== WORKFLOW 2: PROCESSING ==========
+    subgraph W2["Workflow 2 — Multimodal RAG Processing"]
+        direction TB
+        W2A["Manual / Schedule Trigger<br/>or webhook from n8n Data Table"]
+        W2B["Google Sheets<br/>Get row(s) in sheet"]
+        W2C["SplitInBatches<br/>Loop Over Items (batch=1)"]
+        W2D{"IF<br/>photo_drive_link notEmpty?"}
+
+        W2E["Google Drive<br/>Search files and folders"]
+        W2F["Google Drive<br/>Download file (binary)"]
+        W2G["OpenAI Chat Model<br/>gpt-5-mini (Vision)"]
+        W2H["Basic LLM Chain<br/>Inspect Image (objective)"]
+
+        W2I["Qdrant Vector Store<br/>retrieve top-k=4"]
+        W2J["OpenAI Embeddings<br/>text-embedding-3-small @ 768d"]
+        W2K["Aggregate<br/>merge chunks + scores"]
+
+        W2L["Basic LLM Chain<br/>Strict RAG Policy Evaluator"]
+        W2M["Google Gemini Chat Model<br/>gemini-4-argon"]
+        W2N["Structured Output Parser<br/>{answer_in_docs, relevant_files,<br/>missing_or_gap, draft_or_next_step}"]
+
+        W2O["Google Sheets<br/>Update row (NorthstarEmails)"]
+        W2P["n8n Data Table<br/>Upsert row -> Northstar_Cases"]
+
+        W2A --> W2B --> W2C --> W2I
+        W2C --> W2D
+        W2D -->|"true (photo present)"| W2E --> W2F --> W2H
+        W2H --> W2L
+        W2D -->|"false (no photo)"| W2L
+        W2J -.->|"vectorize prompt"| W2I
+        W2I --> W2K --> W2L
+        W2M -.->|"chat completion"| W2L
+        W2N -.->|"json schema"| W2L
+        W2L --> W2O --> W2P
+    end
+
+    %% ========== EMBEDDING BENCHMARK (Colab) ==========
+    subgraph BENCH["Embedding Benchmark Study (Google Colab)"]
+        direction LR
+        B1["50-customer-query<br/>retrieval test set"]
+        B2["OpenAI text-embedding-3-small<br/>1536 / 768 / 512 / 256 / 128 (Matryoshka)"]
+        B3["Google EmbeddingGemma 300M<br/>768 / 512 / 256 / 128 (Matryoshka native)"]
+        B4["Qdrant collection<br/>Top-K = 1, 3, 5"]
+        B5["Hit@1 / Hit@3 / Hit@5<br/>+ avg embed ms + avg search ms"]
+        B1 --> B2 --> B4
+        B1 --> B3 --> B4
+        B4 --> B5
+    end
+
+    %% ========== KNOWN SURFACES ==========
+    DRIVE[("Google Drive<br/>Northstar/<br/>attached photos")]
+    SHEETS[("Google Sheets<br/>NorthstarEmails<br/>+ 4 audit columns")]
+    QDRANT[("Qdrant Cloud<br/>CustomerOperations<br/>collection @ 768d")]
+    DT[("n8n Data Table<br/>Northstar_Cases<br/>(system of record)")]
+    SLACK[("Slack / Email<br/>(downstream handoff)")]
+
+    WP --> W1A
+    W1C --> DRIVE
+    W1D --> SHEETS
+    W2B --> SHEETS
+    W2E --> DRIVE
+    W2I --> QDRANT
+    W2J --> QDRANT
+    W2O --> SHEETS
+    W2P --> DT
+    W2P --> SLACK
+
+    %% ========== STYLING ==========
+    style W1 fill:#e0f2fe,stroke:#075985
+    style W2 fill:#fef9c3,stroke:#854d0e
+    style BENCH fill:#ede9fe,stroke:#5b21b6
+    style SRC fill:#f5f5f4,stroke:#44403c
+    style DRIVE fill:#dcfce7,stroke:#166534
+    style SHEETS fill:#dcfce7,stroke:#166534
+    style QDRANT fill:#fee2e2,stroke:#991b1b
+    style DT fill:#fee2e2,stroke:#991b1b
+    style SLACK fill:#f5d0fe,stroke:#86198f
+    style W2D fill:#fde68a,stroke:#92400e
+    style W2L fill:#fde68a,stroke:#92400e
+    style W2N fill:#bbf7d0,stroke:#14532d

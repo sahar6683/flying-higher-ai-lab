@@ -1,0 +1,951 @@
+{
+  "name": "Northstar Intelligent Customer Operations - Processing",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2192,
+        -672
+      ],
+      "id": "bcae1fcb-644d-4109-9fa8-8bc8df7c6886",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "NorthstarEmails",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1968,
+        -672
+      ],
+      "id": "852346b0-dfbb-433b-985f-7753fad77113",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1360,
+        -672
+      ],
+      "id": "aa8a57d6-8ec1-4e9b-8c27-dc4791bee6d8",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "CustomerOperations",
+          "mode": "list",
+          "cachedResultName": "CustomerOperations"
+        },
+        "prompt": "={{ $json.description }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        -1136,
+        -672
+      ],
+      "id": "21fe3557-6e55-4d43-8c15-d841b55d2cdd",
+      "name": "Qdrant Vector Store",
+      "credentials": {
+        "qdrantApi": {
+          "id": "YOUR_QDRANT_CREDENTIAL_ID",
+          "name": "Qdrant account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": "={{ 768 }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1136,
+        -496
+      ],
+      "id": "84fa9ba9-41b8-471a-90da-f2aaf9fb1a05",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -784,
+        -672
+      ],
+      "id": "4cd3d994-c284-40e3-849b-f630ed67dc01",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "NorthstarEmails",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "top_file": "={{ $('Aggregate').item.json.data[0].document.metadata.source }}",
+            "top_score": "={{ $('Aggregate').item.json.data[0].score.toFixed(4) }}",
+            "returned_files": "={{ [...new Set($('Aggregate').item.json.data.map(item => item.document.metadata.source))].join(', ') }}",
+            "returned_scores": "={{ $('Aggregate').item.json.data.map(item => item.document.metadata.source.split('_')[0] + ' (chunk ' + item.document.metadata.chunk_id + '): ' + item.score.toFixed(4)).join(' | ') }}",
+            "row_number": "={{ $('Get row(s) in sheet').item.json.row_number }}\n",
+            "answer_in_docs": "={{ $json.output.answer_in_docs }}",
+            "relevant_files": "={{ $json.output.relevant_files }}",
+            "missing_or_gap": "={{ $json.output.missing_or_gap }}",
+            "draft_or_next_step": "={{ $json.output.draft_or_next_step }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "category_hint",
+              "displayName": "category_hint",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "photo_drive_link",
+              "displayName": "photo_drive_link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "top_file",
+              "displayName": "top_file",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "top_score",
+              "displayName": "top_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "returned_files",
+              "displayName": "returned_files",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "returned_scores",
+              "displayName": "returned_scores",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "answer_in_docs",
+              "displayName": "answer_in_docs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "relevant_files",
+              "displayName": "relevant_files",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "missing_or_gap",
+              "displayName": "missing_or_gap",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "draft_or_next_step",
+              "displayName": "draft_or_next_step",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -624,
+        -112
+      ],
+      "id": "a0e5cd0e-0190-4dd8-8c30-714f17a846cf",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Customer Query:\n{{ $('Loop Over Items').item.json.description }}\n\nCustomer Order Number Provided:\n{{ $('Loop Over Items').item.json.order_number || 'None provided' }}\n\nPhoto / Attachment Filename:\n{{ $('Loop Over Items').item.json.photo_drive_link || 'None' }}\n\nAttached Image Inspection (from Vision Model):\n{{ $json.text ? $json.text : 'No image attached' }}\n\nRetrieved Qdrant Policy Chunks:\n{{ $('Aggregate').item.json.data.map((item, i) => `--- CHUNK ${i+1} | Source: ${item.document.metadata.source} (Chunk ${item.document.metadata.chunk_id}, Score: ${item.score.toFixed(4)}) ---\\n${item.document.pageContent}`).join('\\n\\n') }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a strict RAG Policy Evaluator for Northstar Supplies Ltd. Your job is to compare the Customer Query against the Retrieved Qdrant Policy Chunks and evaluate whether the retrieved documents contain the answer.  Follow these strict rules: 1. ONLY use facts explicitly stated in the Retrieved Qdrant Policy Chunks. Never invent policies, fees, or timelines. 2. Check EVERY part of the customer's question:    - Choose \"Yes\" ONLY if the retrieved chunks fully cover the policy/workflow needed to handle the customer's request.    - Choose \"Partial (Policy Gap)\" if the chunks answer part of the question, OR if the customer asks a specific question (e.g., who pays return postage, compatibility, price match) that is NOT stated in the retrieved chunks.    - Choose \"Needs Clarification (Vague)\" if the customer's message is too vague to know what they are asking, or is missing critical context.    - Choose \"No\" if the retrieved chunks are completely unrelated to the customer's question. 3. In \"relevant_files\", list ONLY the source filenames from the retrieved chunks that actually contain relevant rules for this query (ignore unrelated chunks that just happened to be in the top 4). 4. In \"missing_or_gap\", explicitly state what information is missing from the policy chunks OR what verification/evidence (e.g., photo review, order verification code, human approval) is required before a final answer. If there is no policy gap, write \"None (standard verification/approval applies)\"."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -960,
+        -96
+      ],
+      "id": "67528c8a-7c83-4be1-a612-022c5c210935",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-4-argon",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -960,
+        48
+      ],
+      "id": "e661a5f7-09d4-4293-a294-026e8b597547",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"answer_in_docs\": \"Yes\",\n  \"relevant_files\": \"NS-RET_Returns_and_Refunds_Policy.pdf\",\n  \"missing_or_gap\": \"Policy states change-of-mind return window (30 days) and refund timing (5 working days), but does NOT state who pays return postage.\",\n  \"draft_or_next_step\": \"Eligible within 30 calendar days; send within 14 days of authorisation. Escalate to human for return postage cost and return authorisation.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -800,
+        48
+      ],
+      "id": "89209bc8-1996-4cf7-b6f1-11d421cd8e16",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d58c6582-98b5-482e-91c2-475c5c5b9f9b",
+              "leftValue": "={{ $('Loop Over Items').item.json.photo_drive_link }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1648,
+        -240
+      ],
+      "id": "a1229c22-899f-4afd-a58c-5932a1b99dce",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $('Loop Over Items').item.json.photo_drive_link }}",
+        "limit": 1,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "YOUR_GOOGLE_DRIVE_FOLDER_ID",
+            "mode": "list",
+            "cachedResultName": "Northstar",
+            "cachedResultUrl": "https://drive.google.com/YOUR_GOOGLE_DRIVE_URL"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1408,
+        -352
+      ],
+      "id": "8cb9b259-fea6-4f4e-8d6b-29eb8e89cfca",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1184,
+        -352
+      ],
+      "id": "139646b3-13ec-4cb9-99d5-1444c177724e",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are inspecting a customer support photo attached to this request: \n\"{{ $('Loop Over Items').item.json.attachment ? $('Analyze an image').first().json.content : 'No image attached' }}\"\n\n1. Describe strictly and objectively ONLY what is visibly present in the image (e.g., whether the box is sealed or open, exterior packaging condition, whether interior items are visible, labels/model numbers, error lights, or if the image is blurry/unclear).\n2. Explicitly state whether the visible evidence in the photo matches, contradicts, or fails to show the issue claimed in the customer's request (for example, if they claim interior item damage but the photo only shows an unopened/intact exterior box).\n\nKeep it concise (2-3 sentences).",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "messageType": "imageBinary"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -976,
+        -352
+      ],
+      "id": "475088ef-9b1a-4e20-9a66-5d787e310479",
+      "name": "Basic LLM Chain Inspect Image"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -976,
+        -208
+      ],
+      "id": "2dd116f0-0319-4d0e-8eda-19761e02f61e",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "maxItems": 50
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -1808,
+        -672
+      ],
+      "id": "f5f53d26-85c0-4e99-9dc7-be7d44e700b9",
+      "name": "Limit",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e74efce0-5454-4db3-ae57-0d471d502263",
+              "leftValue": "={{ $json.row_number }}",
+              "rightValue": "33",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -1584,
+        -672
+      ],
+      "id": "6989402a-b5b3-4832-910d-cc8cabfcb3e1",
+      "name": "Filter",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "Lc9FkSTnxA6wWax3",
+          "mode": "list",
+          "cachedResultName": "Northstar_Cases",
+          "cachedResultUrl": "/projects/yGeOq5CPiWcD2IzR/datatables/Lc9FkSTnxA6wWax3"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "case_id",
+              "keyValue": "={{ $('Loop Over Items').item.json.row_number - 1 }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "case_id": "={{ $('Loop Over Items').item.json.row_number - 1 }}",
+            "missing_or_gap": "={{ $json.missing_or_gap }}",
+            "relevant_files": "={{ $json.relevant_files }}",
+            "answer_in_docs": "={{ $json.answer_in_docs }}",
+            "ai_draft_decision": "={{ $json.draft_or_next_step }}",
+            "order_number": "={{ String($('Loop Over Items').item.json.order_number || 'None') }}",
+            "customer_query": "={{ $('Loop Over Items').item.json.description || $json.description }}",
+            "image_inspection": "={{ $('Loop Over Items').item.json.photo_drive_link ? $('Basic LLM Chain Inspect Image').first().json.text : 'No image attached' }}",
+            "case_status": "={{ $json.answer_in_docs === 'Yes' ? 'Ready' : 'Needs Human Review' }}",
+            "review_outcome": "={{ $json.answer_in_docs === 'Yes' ? 'Auto-Processed' : 'Pending Review' }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "case_id",
+              "displayName": "case_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "order_number",
+              "displayName": "order_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customer_query",
+              "displayName": "customer_query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "image_inspection",
+              "displayName": "image_inspection",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "answer_in_docs",
+              "displayName": "answer_in_docs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "relevant_files",
+              "displayName": "relevant_files",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "missing_or_gap",
+              "displayName": "missing_or_gap",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ai_draft_decision",
+              "displayName": "ai_draft_decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "case_status",
+              "displayName": "case_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "review_outcome",
+              "displayName": "review_outcome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -480,
+        -112
+      ],
+      "id": "c31c22c9-ec5d-4c71-ba3f-9e03ad67a5d6",
+      "name": "Northstar_Cases"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Northstar_Cases",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain Inspect Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain Inspect Image",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain Inspect Image": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Northstar_Cases": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "id": "YOUR_WORKFLOW_INSTANCE_ID"
+}

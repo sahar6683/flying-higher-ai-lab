@@ -284,6 +284,10 @@ For Northstar's data that was **768d + top-k = 4**. For a longer-form legal-corp
 
 - **<a href="https://flyinghigherai.substack.com/p/what-i-learned-benchmarking-embeddinggemma" target="_blank" rel="noopener noreferrer">07 — What I Learned Benchmarking EmbeddingGemma Against OpenAI’s Embedding Model ↗</a>**  
 Before locking in an embedding model for my Customer Ops RAG pipeline, I pitted EmbeddingGemma 2 against OpenAI in Google Colab. The open-weight newcomer won by a landslide.
+
+- **<a href="https://flyinghigherai.substack.com/p/beyond-the-vector-space-building" target="_blank" rel="noopener noreferrer">08 — Beyond the Vector Space: Building an Auditable, Multimodal Customer Ops Pipeline in n8n ↗</a>**  
+ How I bridged dense retrieval, Vision models, and structured business rules to triage 50 real-world customer tickets
+
 ---
 
 ## 🧰 Tech & tools used in this project

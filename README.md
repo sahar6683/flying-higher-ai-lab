@@ -206,6 +206,9 @@ Every system in this repository is paired with a deep-dive engineering case stud
 - **<a href="https://flyinghigherai.substack.com/p/what-i-learned-benchmarking-embeddinggemma" target="_blank" rel="noopener noreferrer">07 — What I Learned Benchmarking EmbeddingGemma Against OpenAI ↗</a>**  
   Head-to-head retrieval benchmark of Google’s open-weight EmbeddingGemma 2 vs OpenAI’s `text-embedding-3-small` over a 50-query customer-ops test set in Google Colab. Documents how Matryoshka truncation (768 / 512 / 256 / 128 dimensions) holds accuracy while cutting storage by up to two-thirds — and why retrieval misses are usually a chunking problem, not a model problem.
 
+- **<a href="https://flyinghigherai.substack.com/p/beyond-the-vector-space-building" target="_blank" rel="noopener noreferrer">08 — Beyond the Vector Space: Building an Auditable, Multimodal Customer Ops Pipeline in n8n ↗</a>**  
+ How I bridged dense retrieval, Vision models, and structured business rules to triage 50 real-world customer tickets
+
 👉 **Subscribe & read the full publication:** **[flyinghigherai.substack.com](https://flyinghigherai.substack.com/)**
 ---
 ## 🧰 Tech & Tools

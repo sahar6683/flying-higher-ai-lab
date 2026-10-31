@@ -209,6 +209,9 @@ Every system in this repository is paired with a deep-dive engineering case stud
 - **<a href="https://flyinghigherai.substack.com/p/beyond-the-vector-space-building" target="_blank" rel="noopener noreferrer">08 — Beyond the Vector Space: Building an Auditable, Multimodal Customer Ops Pipeline in n8n ↗</a>**  
  How I bridged dense retrieval, Vision models, and structured business rules to triage 50 real-world customer tickets
 
+- **<a href="https://flyinghigherai.substack.com/p/scaling-enterprise-rag-what-breaks" target="_blank" rel="noopener noreferrer">09 — Scaling Enterprise RAG: What Breaks, What Fails Silently, and How to Fix It ↗</a>**  
+ HMoving from 10 to 100 documents: how we diagnosed broken retrieval stages and pushed recall to 94.8%.
+
 👉 **Subscribe & read the full publication:** **[flyinghigherai.substack.com](https://flyinghigherai.substack.com/)**
 ---
 ## 🧰 Tech & Tools

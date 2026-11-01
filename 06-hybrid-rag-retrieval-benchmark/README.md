@@ -37,6 +37,10 @@ The manifest describes **100 PDFs** across seven categories: returns/refunds, sh
 
 The Colab outputs report **713 chunks** over 100 documents (mean 7.13/document; chunk character-count median 208, mean 293.8), with a validation report showing 100/100 source PDFs extracted and no extraction failures. One intermediate Phase 1 cleanup cell filters 299 heading-only micro-chunks, leaving 414 substantive chunks. Later dense/hybrid score arrays and benchmark runs are described as 250 queries × 713 chunks. The source run therefore includes multiple corpus representations; compare results only within the stated run/protocol. The included 713-row `data/chunks.csv` is the full-text source for the new reproducible BM25 baseline.
 
+> **Why the title breadcrumb matters for retrieval:** Section chunking can create “orphan” chunks, so ingestion carries the parent policy identity into every chunk. The included `phase1_ingest.py` resolves a document title from PDF metadata, falling back to the earliest plausible heading when metadata is blank/unhelpful; it detects the policy code from the filename first (then document text). It prepends `[Doc: {doc_code or source_file} | Category: {category} | Title: {title}]` to each chunk, followed by the section body. The packaged `chunks.csv` confirms this directly: its `title` column is also present inside each chunk’s `text`.
+>
+> This breadcrumb gives lexical retrieval and neural retrievers/rerankers an explicit policy name/code, category, and parent identity alongside the section text—helpful when a customer uses a policy name, code, or topic term and when neural models need chunk context. The article describes it as an identity tag so a chunk retains its parent context. **Important nuance:** the article’s standalone BM25 figures do not show a measured gain from adding the breadcrumb: context-enriched chunks scored 55.6% Recall@1 versus 58.4% for raw/cleaned full PDFs, and the article notes shared category words can dilute lexical specificity. There is no isolated title-only ablation here, so treat title context as a corpus/retrieval design rationale, not a separately quantified accuracy lift.
+
 ### Evaluation set
 
 The provided `data/expanded_tickets` files contain 250 ticket records, the primary expected policy and chunk labels, optional secondary policy labels, query type, category, customer wording, and retrieval rationale. Counts are balanced by query style (125 each) and distributed across categories as supplied in the source workbook. Ground truth is primarily evaluated at the **policy-document** level, after chunk-to-document mapping and deduplication. The benchmark asks whether the expected policy appears in the first K unique documents, not whether the exact expected chunk is at rank K.
@@ -179,15 +183,11 @@ The 22M cross-encoder improves the RRF top-1 only modestly but degrades the tune
 | Stage 1 Baseline (Gemma2 + BM25) | 79.2% | 88.8% | 90.4% | 93.2% | 0.8414 |
 | **Stage 2 BGE-Reranker-v2-m3 (568M)** | **83.2%** | **92.4%** | **92.8%** | **93.2%** | **0.8782** |
 
-The degradation from naively replacing Stage 1's ranking with `ms-marco-MiniLM-L-6-v2` (22M parameters) points to a **capacity inversion**: a lightweight 22M cross-encoder has less semantic capacity than the 308M-parameter EmbeddingGemma Stage 1 retriever. Without stabilization through Residual Reranking, the smaller model overwrites nuanced policy rankings.
+The degradation from naively replacing Stage 1's ranking with `ms-marco-MiniLM-L-6-v2` (22M parameters) points to a capacity inversion: this lightweight cross-encoder has less semantic capacity than the 308M-parameter EmbeddingGemma Stage 1 retriever. Without stabilization through Residual Reranking, the smaller model can weaken nuanced policy rankings.
 
-Testing this hypothesis with the higher-capacity **`BAAI/bge-reranker-v2-m3` (568M parameters)** confirms that scaling reranker capacity above the Stage 1 bi-encoder resolves nuanced policy distinctions directly:
-* **R@1** climbs from **79.2% to 83.2%** (+4.0 percentage points).
-* **R@5** rises from **90.4% to 92.8%**.
-* **MRR@10** jumps from **0.8414 to 0.8782**—the highest overall ranking quality in the benchmark.
+Testing the hypothesis with the higher-capacity `BAAI/bge-reranker-v2-m3` (568M parameters) shows that scaling reranker capacity above the Stage 1 bi-encoder helps resolve nuanced policy distinctions directly. Recall@1 rises from **79.2% to 83.2%** (+4.0 percentage points), Recall@5 from **90.4% to 92.8%**, and MRR@10 from **0.8414 to 0.8782**.
 
-**Production Takeaway:** **Residual Reranking with MiniLM (22M)** delivers ~99% of the gains at ultra-low CPU latency (`81.2%` R@1 / `0.8662` MRR@10), while **`BGE-Reranker-v2-m3` (568M)** provides the highest absolute ceiling (`83.2%` R@1 / `0.8782` MRR@10) when GPU compute budgets allow.
-
+The architectural trade-off is clear: **Residual Reranking with MiniLM (22M)** delivers ~99% of the gains at ultra-low CPU latency, while **BGE-Reranker-v2-m3 (568M)** provides the highest absolute ceiling (**83.2% R@1 / 0.8782 MRR@10**) when GPU compute budgets allow.
 ### Summary of all phases
 
 The uploaded `table 7.jpg` summary figure is partly cropped/illegible. Rather than infer obscured cells, this summary table consolidates only fully legible reported rows above. “Not reported” means that specific value is unavailable for that exact protocol.
@@ -270,3 +270,9 @@ The uploaded `table 7.jpg` summary figure is partly cropped/illegible. Rather th
 ## Sources and scope
 
 Project results were transcribed from the uploaded article, `EmbeddingGemma2 project 2.ipynb`, spreadsheet data, and accompanying table images. The notebook is experimental research material, not a production RAG service. No customer-facing decisions are made here. Validate data rights, benchmark labels, retrieval coverage, and model behavior before using this design in a live policy workflow.
+
+---
+
+## Read the companion article
+
+**[Scaling Enterprise RAG: What Breaks, What Fails Silently, and How to Fix It ↗](https://flyinghigherai.substack.com/p/scaling-enterprise-rag-what-breaks)** — the article behind this benchmark, covering corpus ingestion, retrieval stages, hybrid fusion, and reranking.

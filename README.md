@@ -3,8 +3,8 @@
 [![Status](https://img.shields.io/badge/status-active-success.svg)]()
 [![Maintained](https://img.shields.io/badge/maintained-yes-blue.svg)]()
 [![n8n](https://img.shields.io/badge/n8n-workflows-ff6d5b?logo=n8n&logoColor=white)](https://n8n.io)
-[![Python](https://img.shields.io/badge/python-ready-3776ab?logo=python&logoColor=white)]()
-[![RAG](https://img.shields.io/badge/RAG-planned-orange)]()
+[![Python](https://img.shields.io/badge/python-benchmarks-3776ab?logo=python&logoColor=white)]()
+[![RAG](https://img.shields.io/badge/RAG-benchmarked-blueviolet)]()
 [![Agentic](https://img.shields.io/badge/agentic-planned-purple)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)]()
 [![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
@@ -46,6 +46,7 @@ Six rules govern every project in this lab:
 | 03 | [AI Purchase Request Approval & Routing System](./03-ai-purchase-request-routing-jev) | n8n · OpenRouter · JEV (noul + score + choice) · Gmail · Gemini · Slack | ✅ Live | All three JEV primitives in one workflow: `noul` for missing-info gate, `score` for risk gate, `choice` for department routing — plus Gemini-drafted Slack messages. |
 | 04 | [Northstar Support RAG Knowledge Base (Qdrant + JEV)](./04-rag-knowledge-base-qdrant-jev) | n8n · Qdrant · OpenAI embeddings · Gemini 2.5 Pro · OpenRouter · JEV · Sheets · Slack | ✅ Live | Three-stage evolution: Drive→Qdrant ingestion, baseline RAG, and production RAG with **JEV grounding gate** + Slack escalation. Zero hallucinated answers shipped to users. |
 | 05 | [Intelligent Customer Operations (Multimodal RAG)](./05-intelligent-customer-ops-multimodal-rag) | n8n · Qdrant · OpenAI embeddings · OpenAI Vision (gpt-5-mini) · Gemini · Sheets · Data Tables | ✅ Live | End-to-end auditable multimodal RAG: photo inspection **before** policy eval, structured 4-bucket triage, full audit trail in Sheets + Data Tables. Companion Matryoshka benchmark (OpenAI vs EmbeddingGemma 2 at 768/512/256/128d) justifies the production `top-k=4, dimensions=768` choice. |
+| 06 | [Hybrid RAG Retrieval Benchmark](./06-hybrid-rag-retrieval-benchmark) | Python · BM25 · EmbeddingGemma 2 · BGE · OpenAI embeddings · RRF · Cross-encoders | ✅ Benchmark documented | 100-policy / 250-ticket retrieval stress test: lexical vs dense, hybrid fusion, MiniLM residual reranking, and BGE-Reranker-v2-m3 validation; best reported residual Recall@5 94.4%, Recall@10 94.8%. |
 ---
 
 ## 📁 Repository layout
@@ -57,86 +58,12 @@ flying-higher-ai-lab/
 ├── LICENSE
 ├── .gitignore
 ├── assets/                                ← logos, badges, screenshots
-│
 ├── 01-Document-Intelligence-Pipeline/
-│   ├── README.md                          ← deep-dive: V2 → V3 → V4 evolution
-│   ├── diagrams/
-│   │   ├── architecture-v4.mmd
-│   │   └── pipeline-overview.mmd
-│   └── workflows/
-│       ├── DocumentAnalysisV2.sanitized.json
-│       ├── DocumentAnalysisV3.sanitized.json
-│       └── DocumentAnalysisV4.sanitized.json
-│
 ├── 02-AI-Email-Intelligence-Routing-JEV/
-│   ├── README.md
-│   ├── diagrams/
-│   │   ├── architecture-v2.mmd
-│   │   └── routing-overview.mmd
-│   ├── assets/
-│   │   ├── workflow-v1.png
-│   │   └── workflow-v2.png
-│   └── workflows/
-│       ├── AIEmailIntelligenceRouting.v1.sanitized.json
-│       └── AIEmailIntelligenceRouting.v2.sanitized.json
-│
 ├── 03-ai-purchase-request-routing-jev/
-│   ├── README.md
-│   ├── diagrams/
-│   │   └── architecture.mmd
-│   ├── workflows/
-│   │   └── workflow.sanitized.json
-│   └── screenshots/
-│       ├── workflow-overview.png
-│       ├── gmail-trigger-inbox.png
-│       ├── get-many-messages-redacted.png       ← personal emails redacted
-│       ├── jev-noul-check-missing-info.png
-│       ├── jev-noul-output-1.png … 4.png
-│       ├── jev-score-risk-assessment.png
-│       └── slack-channel-output.png
-│
 ├── 04-rag-knowledge-base-qdrant-jev/
-│   ├── README.md
-│   ├── diagrams/
-│   │   └── architecture.mmd
-│   ├── workflows/
-│   │   ├── workflow-a-ingestion.sanitized.json   ← Drive → Qdrant
-│   │   ├── workflow-b-rag-baseline.sanitized.json ← Baseline RAG (no JEV)
-│   │   └── workflow-b-v2-rag-with-jev.sanitized.json ← Production RAG with JEV grounding gate
-│   └── screenshots/
-│       ├── workflow-b-rag-baseline.png
-│       ├── workflow-b-v2-with-jev.png
-│       ├── support-question-sample-1.png
-│       └── support-question-sample-2.png
-│
-└── 05-intelligent-customer-ops-multimodal-rag/
-    ├── README.md                          ← deep-dive: multimodal RAG + Matryoshka benchmark
-    ├── diagrams/
-    │   └── architecture.mmd
-    ├── workflows/
-    │   ├── intake-of-queries.sanitized.json           ← WordPress → webhook → Drive → Sheets
-    │   └── processing-multimodal-rag.sanitized.json   ← Qdrant retrieve → Vision inspect → LLM eval → structured output
-    ├── data/
-    │   ├── northstar-cases-sample.csv
-    │   └── northstar-retrieval-test-dataset.csv
-    ├── eval/
-    │   └── (Hit@K + latency tables live here)
-    └── screenshots/
-        ├── 01-intake-webhook-wordpress.png
-        ├── 02-intake-get-from-webhook.png
-        ├── 03-processing-workflow-overview.png
-        ├── 04-processing-qdrant-retrieval.png
-        ├── 05-processing-vision-image-inspection.png
-        ├── 06-processing-llm-chain-structured-output.png
-        ├── 07-processing-update-sheet-and-datatable.png
-        ├── 08-benchmark-cosine-similarity-inspection.png
-        ├── 09-benchmark-topk-hits-comparison.png
-        ├── 10-benchmark-matryoshka-truncation.png
-        ├── 11-benchmark-dimension-vs-accuracy.png
-        ├── 12-matryoshka-dolls-concept.png
-        ├── 13-benchmark-summary-table.png
-        ├── 14-benchmark-table-upscaled.png
-        └── 15-processing-workflow-walkthrough.mp4
+├── 05-intelligent-customer-ops-multimodal-rag/
+└── 06-hybrid-rag-retrieval-benchmark/
 
 ```
 
@@ -214,6 +141,17 @@ Every system in this repository is paired with a deep-dive engineering case stud
 
 👉 **Subscribe & read the full publication:** **[flyinghigherai.substack.com](https://flyinghigherai.substack.com/)**
 ---
+### Skills matrix
+
+| Capability | Projects | Evidence in Project 06 |
+|---|---|---|
+| n8n workflow design & integrations | 01–05 | Retrieval benchmark informs Project 05 production knowledge selection |
+| RAG ingestion, chunking & metadata | 04–06 | Section-aware chunking, boilerplate cleanup, breadcrumbs, corpus manifest |
+| Sparse + dense information retrieval | 05–06 | BM25, cosine similarity, 768d embedding comparison |
+| Evaluation & experimentation | 01–06 | 250-query set, Recall@K, MRR, fusion sweeps, reranker validation |
+| Python / data engineering | 01, 05–06 | Benchmark notebooks, ticket exports, corpus manifest |
+| Human oversight & failure analysis | 01–06 | Explicit retrieval-miss/policy-gap and evidence-quality controls |
+
 ## 🧰 Tech & Tools
 
 | Layer | Stack & Tooling |
@@ -226,6 +164,7 @@ Every system in this repository is paired with a deep-dive engineering case stud
 | **Web & App Integrations** | WordPress (Webhooks & REST API), Gmail, Google Drive, Google Sheets |
 | **Ops & Alerting** | Slack (Human-in-the-Loop Escalation & Audit Channels) |
 | **Data & Glue Code** | JavaScript & Python (n8n Code Nodes), SQL, REST/HTTP APIs, JSON Schema |
+
 
 
 

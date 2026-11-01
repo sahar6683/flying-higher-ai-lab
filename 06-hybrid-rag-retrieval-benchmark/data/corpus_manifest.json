@@ -1,0 +1,502 @@
+[
+  {
+    "Code":"D1",
+    "Filename":"C1ReturnsRefExch-D1-StandardReturnsAndRefundsPolicy.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"RET-30, RET-30-EX, RC-01..RC-05, \/returns\/label, 30-day remorse return rules"
+  },
+  {
+    "Code":"D2",
+    "Filename":"C1ReturnsRefExch-D2-HolidayAndSeasonalExtendedReturns.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"HOL-, BF-2026, XM-2026, NY-2026, RET-HOL, Nov 1–Dec 24 purchase window through Jan 31"
+  },
+  {
+    "Code":"D3",
+    "Filename":"C1ReturnsRefExch-D3-DamagedDefectiveOrDOAItemsOnArrival.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"RET-DOA, RET-DMG, RET-DEF, INC-ARR, \/returns\/evidence, 24h DOA \/ 48h transit damage SLA"
+  },
+  {
+    "Code":"D4",
+    "Filename":"C1ReturnsRefExch-D4-FinalSaleClearanceAndNonReturnableItems.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"FSC-, END-, COS-, DGT-, BULK-, FOOD-, RET-NR, hygiene seals & clearance exclusions"
+  },
+  {
+    "Code":"D5",
+    "Filename":"C1ReturnsRefExch-D5-InStorePurchaseAndOnlineCrossChannelReturns.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"ST-, WEB-, ST-REC-YYYYMMDD-NNNN, RMA-WEB, RET-CROSS, 5% cross-channel handling fee"
+  },
+  {
+    "Code":"D6",
+    "Filename":"C1ReturnsRefExch-D6-GiftReturnsGiftReceiptsAndStoreCredit.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"GR-YYYYMMDD-NNNN, NSC-SC-GC-, GW-, RC-09, non-purchaser gift returns & e-vouchers"
+  },
+  {
+    "Code":"D7",
+    "Filename":"C1ReturnsRefExch-D7-RestockingFeesForOpenedElectronicsAndHeavyGoods.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"ELE-, HW-, FRAG-, 15% \/ 10% \/ 7.5% fee tiers, £3.50 min, £60 \/ £120 fee caps"
+  },
+  {
+    "Code":"D8",
+    "Filename":"C1ReturnsRefExch-D8-BundleBOGOAndPromotionalFreeGiftReturns.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"BND-, BOGO-, FG-, RET-BND, RET-BOGO, pro-rata bundle split & unreturned free gift deduction"
+  },
+  {
+    "Code":"D9",
+    "Filename":"C1ReturnsRefExch-D9-InternationalReturnsCustomsAndDutiesRecovery.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"EU-, US-, CH-, NO-, RET-INT, CN22, CN23, DDP-RECV, HMRC VAT & duty recovery"
+  },
+  {
+    "Code":"D10",
+    "Filename":"C1ReturnsRefExch-D10-ReturnShippingLabelsPrepaidQRCodesAndDropOff.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"RPD-, EVRI-, DPD-, PS-XXXX, RPD-FEE-3.95, printerless QR codes & drop-off weight limits"
+  },
+  {
+    "Code":"D11",
+    "Filename":"C1ReturnsRefExch-D11-MissingItemFromMultiItemReturnDeduction.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"MID-, MID-AGR, MID-DIS, warehouse weigh-in variance & partial return holds"
+  },
+  {
+    "Code":"D12",
+    "Filename":"C1ReturnsRefExch-D12-SizeAndVariantDirectExchangeProcedure.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"SIZE-, COL-, EXC-SIZE, EXC-COL, EXC-FAIL, like-for-like variant swap & 5-day stock hold"
+  },
+  {
+    "Code":"D13",
+    "Filename":"C1ReturnsRefExch-D13-LateReturnsOutsidePolicyWindowExceptions.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"EXC-LATE-MED, EXC-LATE-EXT, EXC-LATE-NONE, Day 31–37 grace window & Day 38–60 80% credit"
+  },
+  {
+    "Code":"D14",
+    "Filename":"C1ReturnsRefExch-D14-RefundProcessingTimelinesAndOriginalPaymentReversal.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"PAY-REV, PAY-BNPL, PAY-PART, PAY-MULTI, Klarna\/Clearpay, PayPal & BACS settlement windows"
+  },
+  {
+    "Code":"D15",
+    "Filename":"C1ReturnsRefExch-D15-ReturnAbuseSerialWardrobingAndAccountFlags.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"FLG-R01..FLG-R05, 4 returns \/ 90 days threshold, wardrobing & self-service portal lock"
+  },
+  {
+    "Code":"D1",
+    "Filename":"C2ShipDelivTrack-D1-StandardDomesticDeliveryAndShippingCharges.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"DEL-STD, SHIP-75, RUR-SUR-3.50, \/shipping\/rates, mainland UK £4.95, Scottish Highlands\/Islands £8.45, 2–4 day SLA"
+  },
+  {
+    "Code":"D2",
+    "Filename":"C2ShipDelivTrack-D2-WarehouseDispatchAndCarrierHandoff.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"WH-CUTOFF-1400, SCAN-DOCK, HOLD-STOCK, FUL-ERR-01, 14:00 GMT cut-off, manifest sync, dock reconciliation"
+  },
+  {
+    "Code":"D3",
+    "Filename":"C2ShipDelivTrack-D3-TrackingEventsAndStatusInterpretation.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"TRK-STATUS-HUB, EVENT-INT, SCAN-DELAY, NSTR-, milestone definitions (Manifest Created, In Hub, Out for Delivery)"
+  },
+  {
+    "Code":"D4",
+    "Filename":"C2ShipDelivTrack-D4-DelayedShipmentsAndDisruptionManagement.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"DLY-ESC-01, CR-DISRUPT, DLY-COMP-5.00, 72-hour delay credit (£5 voucher), severe weather & strike protocols"
+  },
+  {
+    "Code":"D5",
+    "Filename":"C2ShipDelivTrack-D5-DeliveredScanButParcelNotReceived.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"POD-DIS-01, DENIAL-REC-FORM, CARRIER-INSPECT-72, safe-place GPS audit, 48-hour neighbor check window"
+  },
+  {
+    "Code":"D6",
+    "Filename":"C2ShipDelivTrack-D6-PreDispatchAddressChangeAndDeliveryInstructions.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"ADDR-CHG-PRE, ADDR-LOCK-ALLOC, DIVERT-HOLD, pre-manifest address edits, post-allocation divert holds"
+  },
+  {
+    "Code":"D7",
+    "Filename":"C2ShipDelivTrack-D7-SplitShipmentsBackordersAndPartialFulfilment.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"SPLIT-FUL-01, BACKORDER-RES, PARTIAL-SHIP-NO-EXTRA, multi-warehouse fulfilment, no split fee policy"
+  },
+  {
+    "Code":"D8",
+    "Filename":"C2ShipDelivTrack-D8-FailedDeliveryRedeliveryAndCollection.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"FAIL-ATT-1..3, RTS-FEE-8.50, PUDO-HOLD-7D, 3 delivery attempts, 7-day parcel shop holding window"
+  },
+  {
+    "Code":"D9",
+    "Filename":"C2ShipDelivTrack-D9-ExpressServicesDeliveryUpgradesAndSurcharges.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"EXP-ND-8.95, EXP-SAT-12.50, EXP-BY10-15.00, next-day £8.95, Saturday £12.50, pre-10:30am £15.00"
+  },
+  {
+    "Code":"D10",
+    "Filename":"C2ShipDelivTrack-D10-CrossBorderShippingCustomsAndImportStatus.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"INT-DDP-TERMS, CUSTOMS-CLEAR-HLD, CN23-EORI-GB, Northern Ireland protocol, EU & international customs holds"
+  },
+  {
+    "Code":"D11",
+    "Filename":"C2ShipDelivTrack-D11-TransitDamagePackagingAndEvidence.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"TRANS-DMG-PKG, PHOTO-EVID-REQ, COLL-DAMAGED-PARCEL, outer box vs. inner item damage, 48-hour photo SLA"
+  },
+  {
+    "Code":"D12",
+    "Filename":"C2ShipDelivTrack-D12-LostParcelTraceAndCarrierClaims.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"LOSS-CLAIM-INIT, TRACE-WINDOW-5D, CARRIER-LIAB-SETTLE, 5-day formal trace window before claim payout"
+  },
+  {
+    "Code":"D13",
+    "Filename":"C2ShipDelivTrack-D13-CarrierServiceFailureAndEscalationMatrix.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"SLA-FAIL-ESC, CARRIER-SLA-TIER1, LEVEL2-OPS-DISP, systematic SLA failures, root cause classification"
+  },
+  {
+    "Code":"D14",
+    "Filename":"C2ShipDelivTrack-D14-ProofOfDeliveryEvidenceAndDataDiscrepancies.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"POD-GPS-DELTA, SIGN-FORGERY-REV, GEOLOC-AUDIT, GPS coordinates variance threshold (>100m trigger)"
+  },
+  {
+    "Code":"D15",
+    "Filename":"C2ShipDelivTrack-D15-ReturnTransitLabelsAndReverseLogistics.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"REV-LOG-LBL, QR-DROP-EVRI, RETURN-TRACK-SCAN, prepaid QR drop-off flow, returns hub receiving scans"
+  },
+  {
+    "Code":"D1",
+    "Filename":"C3OrderPaySubBill-D1-OrderPlacementAndCheckoutVerification.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"ORD-CHK-01, FRAUD-HLD-72, POSTCODE-AUTH-ERR, £0.01 pre-auth, basket reservation, address verification"
+  },
+  {
+    "Code":"D2",
+    "Filename":"C3OrderPaySubBill-D2-OrderCancellationWindowAndPostPlacementEdits.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"CNCL-WIN-15M, POST-ORD-LOCK, CANCEL-REJECT-DISP, 15-minute grace window, post-lock modification blocks"
+  },
+  {
+    "Code":"D3",
+    "Filename":"C3OrderPaySubBill-D3-PaymentMethodsAcceptedAndSurcharges.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"PAY-SUR-RULE, AMEX-LIMIT-500, BACS-CLEAR-3D, Visa\/Mastercard\/Amex\/PayPal\/Apple Pay, BACS rules"
+  },
+  {
+    "Code":"D4",
+    "Filename":"C3OrderPaySubBill-D4-BuyNowPayLaterKlarnaClearpayPolicies.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"BNPL-KLRN-30D, BNPL-DISP-HLD, BNPL-FEE-DISCL, Klarna Pay in 30, Clearpay 4-part split, BNPL disputes"
+  },
+  {
+    "Code":"D5",
+    "Filename":"C3OrderPaySubBill-D5-CreditCardPreAuthorisationAndPaymentFailures.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"CARD-DECL-05, AUTH-HOLD-7D, SCA-3DS-FAIL, 3D Secure 2.0 triggers, banking pre-auth hold release"
+  },
+  {
+    "Code":"D6",
+    "Filename":"C3OrderPaySubBill-D6-VATInvoicingAndBusinessTaxExemption.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"VAT-INV-REQ, GB-VAT-REV-CHG, EORI-VAL-ERR, standard 20% VAT breakdown, UK B2B tax exemptions"
+  },
+  {
+    "Code":"D7",
+    "Filename":"C3OrderPaySubBill-D7-SubscriptionBillingCyclesAndRecurringPayments.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"SUB-BILL-CYC, RECUR-AUTO-RENEW, TIER-PRO-ANN, 30-day recurring cycles, automated renewal notifications"
+  },
+  {
+    "Code":"D8",
+    "Filename":"C3OrderPaySubBill-D8-SubscriptionCancellationAndProratedRefunds.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"SUB-CNCL-7D, PRO-RATE-RFND, SUB-COOL-14D, statutory 14-day cooling-off, pro-rata service deductions"
+  },
+  {
+    "Code":"D9",
+    "Filename":"C3OrderPaySubBill-D9-DiscountCodesVouchersAndPromotionStacking.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"PROMO-STACK-ERR, VOUCH-EXP-90D, MIN-SPEND-50, non-stacking voucher rules, minimum spend thresholds"
+  },
+  {
+    "Code":"D10",
+    "Filename":"C3OrderPaySubBill-D10-CorporateAccountsInvoicingAndCreditTerms.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"CORP-NET30, CREDIT-REV-5000, LATE-PAY-STAT-INT, 30-day net credit limits, Late Payment of Commercial Debts Act"
+  },
+  {
+    "Code":"D11",
+    "Filename":"C3OrderPaySubBill-D11-PricingErrorsAndPriceMatchGuarantees.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"PRC-ERR-INV, PRICE-MATCH-7D, INV-ERR-VOID, unilateral pricing error cancellation, 7-day price match"
+  },
+  {
+    "Code":"D12",
+    "Filename":"C3OrderPaySubBill-D12-GiftCardsECodeBalancesAndExpiry.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"GC-EXP-24M, BAL-INQ-PORTAL, GC-RED-LIMIT, 24-month validity, non-cash redeemable, lost card replacement"
+  },
+  {
+    "Code":"D13",
+    "Filename":"C3OrderPaySubBill-D13-ChargebacksDisputedTransactionsAndFriendlyFraud.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"CB-DISP-EVID, FRIEND-FRAUD-RPT, ACCNT-FREEZE-CB, 14-day merchant response evidence packs, account freezes"
+  },
+  {
+    "Code":"D14",
+    "Filename":"C3OrderPaySubBill-D14-CurrencyConversionAndCrossBorderBillingFees.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"FX-RATE-LOCK, CROSS-BORD-SUR, MULTI-CURR-EUR, daily interbank FX conversion, international card surcharges"
+  },
+  {
+    "Code":"D15",
+    "Filename":"C3OrderPaySubBill-D15-PaymentSecurityPCIComplianceAndTokenisation.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"PCI-DSS-L1, TOKEN-SEC-VAULT, CVV-NO-STORE, vault tokenisation, zero raw card storage, annual audits"
+  },
+  {
+    "Code":"D1",
+    "Filename":"C4WarrantyRepairsTech-D1-WarrantyTermandCoverageVerification.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"WAR-VERIF-01, COV-TIER-STD, CRA-6M-BURDEN, 12-month standard vs 24-month extended tier, proof-of-purchase validation"
+  },
+  {
+    "Code":"D2",
+    "Filename":"C4WarrantyRepairsTech-D2-ExclusionsWearandTearandMisuseDisputes.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"EXCL-WEAR-02, MISUSE-LIQ-ERR, CORR-ASSESS-FEE, water\/liquid ingress, cosmetic wear exclusions, diagnostic fee"
+  },
+  {
+    "Code":"D3",
+    "Filename":"C4WarrantyRepairsTech-D3-DeadOnArrivalDOAandEarlyFailureRouting.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"DOA-30D-PRIO, IMMED-SWAP-AUTH, COURIER-COLL-DOA, 30-day early failure window, expedited swap without prior bench repair"
+  },
+  {
+    "Code":"D4",
+    "Filename":"C4WarrantyRepairsTech-D4-RemoteDiagnosticsandTier1TroubleshootingTriage.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"TRIAGE-STEP-LOG, REMOTE-RESET-04, FW-VER-CHK, structured diagnostic steps, power-cycle logs, firmware checks"
+  },
+  {
+    "Code":"D5",
+    "Filename":"C4WarrantyRepairsTech-D5-WarrantyReturnAuthorisationRMAIssuanceandPackaging.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"RMA-EXP-14D, LBL-PREPAID-WAR, PACK-BOX-REQ, 14-day RMA expiry window, return packing standards, ESD guidelines"
+  },
+  {
+    "Code":"D6",
+    "Filename":"C4WarrantyRepairsTech-D6-BenchInspectionDiagnosticFeesandNonFaultFound.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"NFF-BENCH-35, INSP-REPORT-PDF, DIAG-FEE-DISPUTE, £35 No Fault Found (NFF) charge, return postage invoice rules"
+  },
+  {
+    "Code":"D7",
+    "Filename":"C4WarrantyRepairsTech-D7-AuthorisedServiceCentresandSubcontractorRepairs.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"ASC-DISPATCH-07, THIRD-PARTY-SLA, OEM-AUTH-REPAIR, partner repair SLAs (10 working days), OEM accredited repair network"
+  },
+  {
+    "Code":"D8",
+    "Filename":"C4WarrantyRepairsTech-D8-ReplacementPartsSparesAvailabilityandEndofLife.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"EOL-OBSOLETE-08, SPARE-HOLD-5YR, PART-COMPAT-SUB, 5-year parts availability commitment, alternate\/refurb parts"
+  },
+  {
+    "Code":"D9",
+    "Filename":"C4WarrantyRepairsTech-D9-DirectProductReplacementvsRepairAuthorisationRules.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"REPAIR-VS-SWAP, REPL-THRESH-65, LIKE-FOR-LIKE-EQ, 65% repair-to-cost threshold trigger, like-for-like replacement"
+  },
+  {
+    "Code":"D10",
+    "Filename":"C4WarrantyRepairsTech-D10-RepeatFailuresLemonClauseandPermanentReplacement.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"LEMON-3FAIL-RULE, PERM-CREDIT-AUTH, SERIAL-HISTORY-AUD, 3-repair failure rule within 6 months, mandatory total refund\/credit"
+  },
+  {
+    "Code":"D11",
+    "Filename":"C4WarrantyRepairsTech-D11-SafetyIncidentsStopUseandUrgentEscalation.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"SAFETY-HALT-00, BATTERY-SWELL-EMRG, EXEC-RISK-OPS, battery swelling, electrical fire hazards, 2-hour immediate halt protocol"
+  },
+  {
+    "Code":"D12",
+    "Filename":"C4WarrantyRepairsTech-D12-CommercialandIndustrialUsageWarrantyLimitations.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"COMM-USAGE-CAP, DUTY-CYCLE-EXCEED, B2B-HEAVY-OPS, commercial 90-day duty cycle limits, industrial environment carve-outs"
+  },
+  {
+    "Code":"D13",
+    "Filename":"C4WarrantyRepairsTech-D13-SoftwareFirmwareBugsAndCompatibilityTriage.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"BUG-REG-JIRA, OS-COMPAT-FAIL, PATCH-ROLLOUT-EST, software issue triage, third-party OS conflicts, patch workarounds"
+  },
+  {
+    "Code":"D14",
+    "Filename":"C4WarrantyRepairsTech-D14-LoanerEquipmentandInterimReplacementProvision.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"LOANER-DEP-150, INTERIM-SWAP-SLA, LOAN-RETURN-7D, £150 security deposit hold, enterprise continuity loaner units"
+  },
+  {
+    "Code":"D15",
+    "Filename":"C4WarrantyRepairsTech-D15-RepairCompletionTestReportandCaseClosure.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"QC-PASS-STAMP, REPAIR-WAR-90D, CASE-CLOSE-CONF, 90-day post-repair warranty extension, final bench QC sign-off"
+  },
+  {
+    "Code":"D1",
+    "Filename":"C5AccountSecPriv-D1-Accountregistrationandidentityverification.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"ACC-VERIF-01, ID-CHECK-REJ, \/portal\/account\/verify — ID tiering, proof-of-address, corporate verification"
+  },
+  {
+    "Code":"D2",
+    "Filename":"C5AccountSecPriv-D2-Passwordresets2FAandcredentialrecovery.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"AUTH-2FA-FAIL, RECOV-TOKEN-EXP, \/portal\/auth\/recovery — TOTP reset, lockout timers, verification step-ups"
+  },
+  {
+    "Code":"D3",
+    "Filename":"C5AccountSecPriv-D3-Accounttakeoverfraudandsecuritylockdowns.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"ATO-LOCK-SEC, SUSP-DEV-DETECT, \/portal\/security\/lockout — Rapid quarantine, token revocation, evidence intake"
+  },
+  {
+    "Code":"D4",
+    "Filename":"C5AccountSecPriv-D4-Duplicateaccountsmergesanddataaggregation.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"ACC-MERGE-DUP, PRIMARY-ID-CONF, \/portal\/account\/merge — Master account binding, history migration, credit unifications"
+  },
+  {
+    "Code":"D5",
+    "Filename":"C5AccountSecPriv-D5-GDPRsubjectaccessrequestsDSAR.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"GDPR-DSAR-REQ, ID-CONF-SAR, \/compliance\/dsar\/submit — 30-day statutory response SLA, redaction, data export"
+  },
+  {
+    "Code":"D6",
+    "Filename":"C5AccountSecPriv-D6-GDPRrighttoerasurerequests.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"GDPR-ERASE-APP, RET-EXEMPT-FIN, \/compliance\/erasure\/apply — 6-year HMRC invoice retention exemptions, PII purging"
+  },
+  {
+    "Code":"D7",
+    "Filename":"C5AccountSecPriv-D7-Marketingconsentoptinoptoutandpreferencecentre.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"PREF-OPTOUT-COMM, CONSENT-REVOKE-SYNC, \/portal\/privacy\/preferences — Consent timestamps, channel toggles, 48-hr sync SLA"
+  },
+  {
+    "Code":"D8",
+    "Filename":"C5AccountSecPriv-D8-Dataprivacysecurityincidentreporting.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"INC-REPORT-SEV, DPO-NOTIF-REQ, \/security\/incident\/report — ICO 72-hour notification, risk matrices, containment protocols"
+  },
+  {
+    "Code":"D9",
+    "Filename":"C5AccountSecPriv-D9-Cookiepolicydigitaltrackingandconsentlogs.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"COOKIE-CONS-REJECT, TRACK-PREF-UPDATE, \/legal\/cookies\/consent — CMP categories, session persistence, strictly necessary exceptions"
+  },
+  {
+    "Code":"D10",
+    "Filename":"C5AccountSecPriv-D10-Dormantaccountsretentionandautomatedpurging.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"DORM-PURGE-WARN, INACT-PERIOD-36M, \/portal\/account\/status — 36-month dormancy triggers, pre-deletion warnings, deletion logic"
+  },
+  {
+    "Code":"D11",
+    "Filename":"C5AccountSecPriv-D11-Thirdpartyintegrationsandappauthorisation.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"OAUTH-REVOKE-ALL, APP-PERM-AUDIT, \/portal\/security\/integrations — OAuth token lifespans, scopes, unauthorized connector bans"
+  },
+  {
+    "Code":"D12",
+    "Filename":"C5AccountSecPriv-D12-Childdataprotectionandagegatedservices.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"AGE-GATE-BLOCK, PARENT-CONSENT-REQ, \/compliance\/age-verification — Under-18 verification, parental consent, immediate restrictions"
+  },
+  {
+    "Code":"D13",
+    "Filename":"C5AccountSecPriv-D13-Internalstaffaccesscontrolsandauditlogs.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"RBAC-FAIL-AUDIT, LOG-ANOMALY-ALERT, \/internal\/sec\/access-logs — Least-privilege RBAC, dual-custody access, privileged audit trails"
+  },
+  {
+    "Code":"D14",
+    "Filename":"C5AccountSecPriv-D14-CrossborderdatatransfersandStandardContractualClauses.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"SCC-XFER-VALID, DATA-XFER-REJECT, \/legal\/compliance\/transfers — Adequacy decisions, SCC annexes, UK-to-third-country rules"
+  },
+  {
+    "Code":"D15",
+    "Filename":"C5AccountSecPriv-D15-Lawenforcementrequestsandsubpoenas.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"LE-SUBPOENA-VAL, REQU-REJECT-DEFECT, \/legal\/requests\/law-enforcement — Legal warrant validation, nondisclosure orders, strict DPO review"
+  },
+  {
+    "Code":"D1",
+    "Filename":"C6CustomerCareEsc-D1-ContactchannelsoperatinghoursandresponsetimeSLAs.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"SLA-BREACH-CH, HOURS-OPS-ROUT, \/support\/channels — Multi-channel SLA thresholds, live chat routing, priority queues"
+  },
+  {
+    "Code":"D2",
+    "Filename":"C6CustomerCareEsc-D2-Customeridentityverificationprotocolatintake.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"AUTH-FAIL-INTAKE, STEPUP-ID-SEC, \/support\/verify\/intake — Tier-1 to Tier-3 verification, telephony challenges, bypass rules"
+  },
+  {
+    "Code":"D3",
+    "Filename":"C6CustomerCareEsc-D3-Level1toLevel2supportescalationcriteria.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"ESC-L1-TO-L2, ESCALATION-TRIG-RULE, \/support\/escalate\/tier2 — Technical\/financial thresholds, warm handoff procedures"
+  },
+  {
+    "Code":"D4",
+    "Filename":"C6CustomerCareEsc-D4-Level2toLevel3andleadershipteamreferrals.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"EXEC-DIR-ESC, L3-PRIO-DISP, \/support\/escalate\/executive — Senior resolution panel, brand risk criteria, deadlock notifications"
+  },
+  {
+    "Code":"D5",
+    "Filename":"C6CustomerCareEsc-D5-Customercomplaintsformalprocedureandtimelines.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"COMPLAINT-LOG-P1, FINAL-RESP-LETTER, \/support\/complaints\/formal — Stage 1 to 3 timelines, regulatory escalation, formal written closure"
+  },
+  {
+    "Code":"D6",
+    "Filename":"C6CustomerCareEsc-D6-OmbudsmanADRandlegalescalations.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"ADR-DEADLOCK-ISSUE, LEGAL-HOLD-DISP, \/legal\/ombudsman\/adr — Retail Ombudsman referrals, 8-week deadlocks, legal hold transfers"
+  },
+  {
+    "Code":"D7",
+    "Filename":"C6CustomerCareEsc-D7-Discretionarygesturesofgoodwillandvouchers.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"GOW-AUTH-LIMIT, GOODWILL-APPR-DIR, \/support\/gestures\/goodwill — Spend caps (£15–£100), authority bands, audit frequency"
+  },
+  {
+    "Code":"D8",
+    "Filename":"C6CustomerCareEsc-D8-Agentabuseunacceptablebehaviourandcalltermination.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"ABUSE-CALL-TERM, ZERO-TOL-NOTIF, \/support\/safety\/incident-call — Warning protocols, immediate disconnect criteria, incident reports"
+  },
+  {
+    "Code":"D9",
+    "Filename":"C6CustomerCareEsc-D9-Servicebanandaccountterminationpolicy.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"SVC-BAN-FINAL, TERMINATE-ACC-AUTH, \/compliance\/account\/termination — Grounds for banning, appeal rights, liquidation of stored credit"
+  },
+  {
+    "Code":"D10",
+    "Filename":"C6CustomerCareEsc-D10-VIPandhighvaluecustomercaredelivery.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"VIP-TIER-ASSIGN, KEY-ACC-RECOVERY, \/support\/vip\/concierge — Thresholds (£25k+), dedicated manager routing, accelerated SLAs"
+  },
+  {
+    "Code":"D11",
+    "Filename":"C6CustomerCareEsc-D11-Languageaccessibilityandvulnerablecustomerprovisions.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"VULN-FLAG-PROT, TRANSLATE-REQ-EXT, \/support\/accessibility\/vulnerable — FCA vulnerability indicators, translation tools, third-party consent"
+  },
+  {
+    "Code":"D12",
+    "Filename":"C6CustomerCareEsc-D12-Livechatticketingsysteminteractionrecords.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"TICKET-CLOSE-VERIF, CHAT-AUDIT-DISP, \/support\/ticketing\/rules — Transcript retention, tagging rules, automatic resolution delays"
+  },
+  {
+    "Code":"D13",
+    "Filename":"C6CustomerCareEsc-D13-Socialmediacomplaintsandpublicreputationtriage.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"SM-CRISIS-ROUT, ESC-PR-URGENT, \/pr\/social\/escalation — Viral\/reputational triage, direct message conversion, press holds"
+  },
+  {
+    "Code":"D14",
+    "Filename":"C6CustomerCareEsc-D14-Lostdamageditemsdiscretionarysettlements.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"DISC-SETTLE-CLAIM, AUTH-PAYOUT-DISP, \/claims\/settlement\/discretionary — Fast-track settlements, sub-carrier caps, loss waivers"
+  },
+  {
+    "Code":"D15",
+    "Filename":"C6CustomerCareEsc-D15-CustomerfeedbackNPSreviewsandqualitymonitoring.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"NPS-LOW-ALERT, QA-SCORE-AUDIT, \/support\/quality\/review — Detractor outreach, score calibration, dispute of QA marks"
+  },
+  {
+    "Code":"D1",
+    "Filename":"C7B2BCorporateTrade-D1-B2Baccountapplicationandcommercialcreditvetting.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"B2B-VET-REJ, CREDIT-SCORE-FAIL, \/b2b\/apply\/commercial-credit — Credit checks (Companies House\/Creditsafe), balance sheet criteria"
+  },
+  {
+    "Code":"D2",
+    "Filename":"C7B2BCorporateTrade-D2-Creditlimitreviewassignmentandvariations.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"CREDIT-LIMIT-REV, LIMIT-EXCEED-HOLD, \/b2b\/credit\/limits — Review cycles, automatic freezes at 100%, collateral demands"
+  },
+  {
+    "Code":"D3",
+    "Filename":"C7B2BCorporateTrade-D3-PurchaseorderPOacceptanceandbillingprotocols.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"PO-MATCH-ERR, INV-DISP-PO-HOLD, \/b2b\/billing\/purchase-orders — 3-way matching, unauthorized line rejection, invoice mapping"
+  },
+  {
+    "Code":"D4",
+    "Filename":"C7B2BCorporateTrade-D4-Volumeandbulkpurchasediscounttiers.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"VOL-DISC-TIER, MIN-QTY-REJECT, \/b2b\/pricing\/volume-tiers — Tier 1 to Tier 3 discounts, contract commit rates, audit reviews"
+  },
+  {
+    "Code":"D5",
+    "Filename":"C7B2BCorporateTrade-D5-Customquotesframeworkagreementsandtenders.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"QUOTE-VALID-30D, TENDER-REQD-LEGAL, \/b2b\/quotes\/frameworks — 30-day quote lock, RFP\/tender governance, signature thresholds"
+  },
+  {
+    "Code":"D6",
+    "Filename":"C7B2BCorporateTrade-D6-B2Breturnsexchangesandrestockingfees.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"B2B-RESTOCK-15, REJECT-NO-RMA, \/b2b\/returns\/restock-policy — Non-consumer returns, 15% restocking fees, bespoke order bans"
+  },
+  {
+    "Code":"D7",
+    "Filename":"C7B2BCorporateTrade-D7-Overdueinvoicesdebtcollectionandcreditfreezes.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"DEBT-STAT-INTEREST, FREEZE-ACC-OVERDUE, \/b2b\/credit\/collections — Statutory interest (8% + BoE base), collection agency handoff"
+  },
+  {
+    "Code":"D8",
+    "Filename":"C7B2BCorporateTrade-D8-Dropandpalletdeliverieslogisticsrequirements.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"PALLET-REJECT-DOCK, TAIL-LIFT-SURCH, \/b2b\/logistics\/dock-delivery — Tail-lift requirements, dock clearance times, refusal charges"
+  },
+  {
+    "Code":"D9",
+    "Filename":"C7B2BCorporateTrade-D9-Taxexemptionandcrossbordertraderequirements.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"VAT-REV-GB-EXEMPT, EORI-AUDIT-FAIL, \/b2b\/tax\/exemptions — Zero-rated exports, EORI validation, domestic exemption certificates"
+  },
+  {
+    "Code":"D10",
+    "Filename":"C7B2BCorporateTrade-D10-B2Bterminationinsolvencyandlienprovisions.pdf",
+    "Key Lexical Anchors (for BM25) & Focus (for Vector)":"INSOLV-NOTICE-ACT, LIEN-POSSESS-TITLE, \/b2b\/legal\/termination-lien — Administration events, retention of title, recovery of unpaid goods"
+  }
+]

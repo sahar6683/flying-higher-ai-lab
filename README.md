@@ -138,6 +138,9 @@ Every system in this repository is paired with a deep-dive engineering case stud
 
 - **<a href="https://flyinghigherai.substack.com/p/scaling-enterprise-rag-what-breaks" target="_blank" rel="noopener noreferrer">09 — Scaling Enterprise RAG: What Breaks, What Fails Silently, and How to Fix It ↗</a>**  
  HMoving from 10 to 100 documents: how we diagnosed broken retrieval stages and pushed recall to 94.8%.
+- **<a href="https://flyinghigherai.substack.com/p/building-a-production-evaluation" target="_blank" rel="noopener noreferrer">10 — Building a Production Evaluation Harness & Calibrated Two-Stage AI Retrieval Engine in n8n ↗</a>**  
+How I benchmarked 250 queries across Qdrant Hybrid RRF and Jina Reranker v2 to replace LLM routers with deterministic math.
+
 
 👉 **Subscribe & read the full publication:** **[flyinghigherai.substack.com](https://flyinghigherai.substack.com/)**
 ---

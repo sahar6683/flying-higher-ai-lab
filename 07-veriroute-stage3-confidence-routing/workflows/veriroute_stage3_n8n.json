@@ -1,0 +1,795 @@
+{
+  "name": "VeriRoute AI — Stage 3 Confidence Routing (Sanitized)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        -1072
+      ],
+      "id": "node-01",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://script.google.com/macros/s/YOUR_GOOGLE_SCRIPT_DEPLOYMENT_ID/exec",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -928,
+        -1072
+      ],
+      "id": "node-02",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "maxItems": 150,
+        "keep": "lastItems"
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        -1072
+      ],
+      "id": "node-03",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/embeddings",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_API_KEY_HERE"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/text-embedding-3-small\",\n  \"dimensions\": 768,\n  \"input\": {{ JSON.stringify($json.customer_query) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -480,
+        -1072
+      ],
+      "id": "node-04",
+      "name": "HTTP Req - Get Dense Embedding"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR_QDRANT_CLUSTER_URL/collections/NorthstarDocs2/points/query",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "YOUR_QDRANT_API_KEY_HERE"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prefetch\": [\n    {\n      \"query\": {{ JSON.stringify($json.data[0].embedding) }},\n      \"using\": \"dense\",\n      \"limit\": 25\n    },\n    {\n      \"query\": {\n        \"text\": {{ JSON.stringify($('Limit').item.json.customer_query) }},\n        \"model\": \"Qdrant/bm25\"\n      },\n      \"using\": \"bm25\",\n      \"limit\": 25\n    }\n  ],\n  \"query\": {\n    \"fusion\": \"rrf\"\n  },\n  \"limit\": 15,\n  \"with_payload\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -256,
+        -1072
+      ],
+      "id": "node-05",
+      "name": "HTTP Req - Qdrant Hybrid Search"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================================\n// VERIROUTE AI - STAGE 3: HYBRID RRF + JINA RERANKER + BOUNDARY ENGINE\n// Mode: Run Once for Each Item\n// ============================================================================\n\n// 1. Pull Upstream Data Safely\nconst queryData = $('Limit').item.json;\nconst qdrantResponse = $('HTTP Req - Qdrant Hybrid Search').item.json;\nconst jinaResponse = $('HTTP Req - Jina Reranker').item.json;\n\nconst tid = String(queryData.ticket_id || \"\").trim();\n\nconst points = (qdrantResponse && qdrantResponse.result && Array.isArray(qdrantResponse.result.points))\n  ? qdrantResponse.result.points\n  : [];\n\nconst jinaResults = (jinaResponse && Array.isArray(jinaResponse.results))\n  ? jinaResponse.results\n  : [];\n\n// 2. Helper Functions for Metadata & Document Code Extraction\nfunction getDocId(payload) {\n  if (!payload) return \"UNKNOWN_DOC\";\n  return payload.doc_id || payload.document_id || payload.id || payload.code || payload.file_name || \"UNKNOWN_DOC\";\n}\n\nfunction getChunkId(payload, pointId) {\n  if (!payload) return String(pointId || \"UNKNOWN_CHUNK\");\n  return payload.chunk_id || payload.chunk_index || String(pointId || \"UNKNOWN_CHUNK\");\n}\n\nfunction getTitle(payload, docId) {\n  if (!payload) return docId;\n  return payload.title || payload.section_title || payload.heading || payload.document_title || docId;\n}\n\nfunction getText(payload) {\n  if (!payload) return \"\";\n  return payload.text || payload.content || payload.page_content || payload.chunk_text || \"\";\n}\n\nfunction getBaseCode(docId) {\n  if (!docId || typeof docId !== \"string\") return \"UNKNOWN\";\n  const parts = docId.split(\"_\");\n  return parts.length >= 2 ? `${parts[0]}_${parts[1]}` : docId;\n}\n\n// 3. Map Stage 1 (Qdrant RRF) Candidates\nconst s1Candidates = points.map((pt, idx) => {\n  const payload = pt.payload || {};\n  const docId = getDocId(payload);\n  return {\n    s1_rank: idx + 1,\n    point_id: pt.id,\n    doc_id: docId,\n    base_code: getBaseCode(docId),\n    chunk_id: getChunkId(payload, pt.id),\n    title: getTitle(payload, docId),\n    text: getText(payload),\n    s1_score: typeof pt.score === \"number\" ? Number(pt.score.toFixed(4)) : 0\n  };\n});\n\nconst s1Top1 = s1Candidates[0] || {\n  doc_id: \"NONE\",\n  base_code: \"NONE\",\n  chunk_id: \"NONE\",\n  title: \"No Stage 1 Candidate\",\n  text: \"\",\n  s1_score: 0\n};\n\n// 4. Map Stage 2 (Jina Cross-Encoder Reranker) Candidates\nconst s2Candidates = jinaResults.map((jr, idx) => {\n  const originalIdx = typeof jr.index === \"number\" ? jr.index : idx;\n  const orig = s1Candidates[originalIdx] || s1Top1;\n  const jinaScore = typeof jr.relevance_score === \"number\" ? Number(jr.relevance_score.toFixed(4)) : 0;\n  return {\n    s2_rank: idx + 1,\n    original_s1_rank: orig.s1_rank || (originalIdx + 1),\n    doc_id: orig.doc_id,\n    base_code: orig.base_code,\n    chunk_id: orig.chunk_id,\n    title: orig.title,\n    text: orig.text,\n    s1_score: orig.s1_score,\n    jina_score: jinaScore\n  };\n});\n\nconst s2Top1 = s2Candidates[0] || {\n  doc_id: s1Top1.doc_id,\n  base_code: s1Top1.base_code,\n  chunk_id: s1Top1.chunk_id,\n  title: s1Top1.title,\n  text: s1Top1.text,\n  s1_score: s1Top1.s1_score,\n  jina_score: 0\n};\n\n// Calculate Base 80/20 Residual Blended Score\nconst jinaTop1Score = s2Top1.jina_score || 0;\nconst s1Top1Score = s1Top1.s1_score || 0;\nlet blendedScore = Number(((0.80 * jinaTop1Score) + (0.20 * s1Top1Score)).toFixed(4));\n\n// ============================================================================\n// 5. FAULT INJECTION HOOKS (Exact Ticket IDs & Boundary Overrides)\n// ============================================================================\nif (tid === \"FI-06-02199\" || tid === \"FI-06B\") {\n  blendedScore = 0.2199; // Boundary: Just below 0.2200 -> Tier 3\n} else if (tid === \"FI-06-02200\" || tid === \"FI-06A\") {\n  blendedScore = 0.2200; // Boundary: Exact lower boundary 0.2200 -> Tier 2\n} else if (tid === \"FI-05-04499\" || tid === \"FI-05B\") {\n  blendedScore = 0.4499; // Boundary: Just below 0.4500 -> Tier 2\n} else if (tid === \"FI-05-04500\" || tid === \"FI-05A\") {\n  blendedScore = 0.4500; // Boundary: Exact upper boundary 0.4500 -> Tier 1\n} else if (tid === \"FI-07-NAN\" || tid === \"FI-07A\") {\n  blendedScore = NaN;    // Corrupted score -> Triggers Fallback\n} else if (tid === \"FI-08-EXPIRED\" || tid === \"FI-08\") {\n  blendedScore = 0.8500; // High score -> Tier 1 Verifier evaluates the expired text\n}\n\n// ============================================================================\n// 6. Explicit Half-Open Interval Boundary Routing\n// Tier 1: [0.4500, 1.0000]\n// Tier 2: [0.2200, 0.4500)\n// Tier 3: [0.0000, 0.2200)\n// Fallback: NaN, null, < 0, or empty candidates\n// ============================================================================\nconst TIER1_THRESHOLD = 0.4500;\nconst TIER2_THRESHOLD = 0.2200;\n\nlet routingTier = \"Fallback: Unroutable / No Candidates\";\nlet boundaryInterval = \"FALLBACK_INVALID_OR_EMPTY\";\n\nconst hasValidCandidates = (s1Candidates.length > 0 && s2Candidates.length > 0 && s2Top1.doc_id !== \"NONE\");\n\nif (hasValidCandidates && typeof blendedScore === \"number\" && !Number.isNaN(blendedScore) && blendedScore >= 0) {\n  if (blendedScore >= TIER1_THRESHOLD) {\n    routingTier = \"Tier 1: Auto-Resolve\";\n    boundaryInterval = \"[0.4500, 1.0000]\";\n  } else if (blendedScore >= TIER2_THRESHOLD) {\n    routingTier = \"Tier 2: Agent Assist / Copilot\";\n    boundaryInterval = \"[0.2200, 0.4500)\";\n  } else {\n    routingTier = \"Tier 3: Escalate to Human\";\n    boundaryInterval = \"[0.0000, 0.2200)\";\n  }\n}\n\n// Fault Injection Hook: Force Unrecognized Tier String to test Fallback Dead-Letter\nif (tid === \"FI-07-NULL\" || tid === \"FI-07B\") {\n  routingTier = \"UNROUTABLE_NULL_TIER\";\n  boundaryInterval = \"FALLBACK_CORRUPTED_TIER_STRING\";\n}\n\n// 7. Build Formatted Summaries & Context Blocks\nconst s2Top5Formatted = s2Candidates.slice(0, 5).map(c =>\n  `#${c.s2_rank} [Jina: ${c.jina_score} | RRF: ${c.s1_score}] ${c.doc_id} (${c.title})`\n).join(\"\\n\");\n\nconst distinctDocs = [];\nconst seenBaseCodes = new Set();\nfor (const cand of s2Candidates) {\n  if (!seenBaseCodes.has(cand.base_code)) {\n    seenBaseCodes.add(cand.base_code);\n    distinctDocs.push(cand);\n  }\n  if (distinctDocs.length >= 3) break;\n}\n\nconst s2Top3DistinctFormatted = distinctDocs.map((c, i) =>\n  `Option ${i + 1}: ${c.doc_id} (${c.title}) — Score: ${c.jina_score}`\n).join(\"\\n\");\n\nconst s2Top3FullTextBlock = distinctDocs.map((c, i) =>\n  `=== CANDIDATE DOCUMENT ${i + 1}: ${c.doc_id} (${c.title}) [Jina Score: ${c.jina_score}] ===\\n${c.text}`\n).join(\"\\n\\n\");\n\n// Inject Expired 2024 Header for Temporal Check on FI-08\nconst s2Top1FullText = (tid === \"FI-08-EXPIRED\" || tid === \"FI-08\")\n  ? `[POLICY METADATA: EFFECTIVE 2023-01-01 | EXPIRED 2024-12-31 — SUPERSEDED AND INACTIVE IN 2026]\\n` + (s2Top1.text || \"\")\n  : (s2Top1.text || \"\");\n\n// 8. Return Full Payload for Switch & Downstream Nodes\nreturn {\n  json: {\n    ticket_id: tid || \"UNKNOWN_TICKET\",\n    customer_query: queryData.customer_query || \"\",\n    query_type: queryData.query_type || \"\",\n    category: queryData.category || \"\",\n    expected_policy_id: queryData.primary_expected_doc_id || queryData.primary_doc_code || \"\",\n    s1_top_1_id: s1Top1.doc_id,\n    s1_top_1_score: s1Top1.s1_score,\n    s2_top_1_id: s2Top1.doc_id,\n    s2_top_1_title: s2Top1.title,\n    s2_top_1_jina_score: jinaTop1Score,\n    blended_score: Number.isNaN(blendedScore) ? \"NaN\" : blendedScore,\n    routing_tier: routingTier,\n    boundary_interval: boundaryInterval,\n    s2_top_1_full_text: s2Top1FullText,\n    s2_top_5_reranked: s2Top5Formatted,\n    s2_top_3_distinct_codes: s2Top3DistinctFormatted,\n    s2_top_3_full_text_block: s2Top3FullTextBlock\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1264,
+        -528
+      ],
+      "id": "node-06",
+      "name": "Code - Hybrid RRF Summary"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "YOUR_N8N_DATA_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_STAGE3_AUDIT_TABLE",
+          "cachedResultUrl": "/projects/YOUR_N8N_PROJECT_ID/datatables/YOUR_N8N_DATA_TABLE_ID"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "ticket_id",
+              "keyValue": "={{ $json.ticket_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ticket_id",
+              "displayName": "ticket_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customer_query",
+              "displayName": "customer_query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "expected_policy_id",
+              "displayName": "expected_policy_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "s1_top_1_id",
+              "displayName": "s1_top_1_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "s2_top_1_id",
+              "displayName": "s2_top_1_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "s2_top_1_title",
+              "displayName": "s2_top_1_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "blended_score",
+              "displayName": "blended_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "routing_tier",
+              "displayName": "routing_tier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "final_operational_action",
+              "displayName": "final_operational_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "audit_verdict",
+              "displayName": "audit_verdict",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "final_generated_output",
+              "displayName": "final_generated_output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        -672
+      ],
+      "id": "node-07",
+      "name": "Upsert row(s)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://script.google.com/macros/s/YOUR_GOOGLE_SCRIPT_DEPLOYMENT_ID/exec",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  JSON.stringify({\n    sheet_name: \"Stage3_VeriRoute_Audit\",\n    ticket_id: $json.ticket_id,\n    customer_query: $json.customer_query,\n    expected_policy_id: $json.expected_policy_id,\n    s1_top_1_id: $json.s1_top_1_id,\n    s2_top_1_id: $json.s2_top_1_id,\n    s2_top_1_title: $json.s2_top_1_title,\n    blended_score: $json.blended_score,\n    routing_tier: $json.routing_tier,\n    final_operational_action: $json.final_operational_action,\n    audit_verdict: $json.audit_verdict,\n    final_generated_output: $json.final_generated_output,\n    timestamp: $json.timestamp\n  })\n}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 500
+            }
+          },
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        528,
+        -672
+      ],
+      "id": "node-08",
+      "name": "HTTP Req - Update Google Sheet WebApp"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.jina.ai/v1/rerank",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_API_KEY_HERE"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"model\": \"jina-reranker-v2-base-multilingual\",\n  \"query\": $('Limit').all()[$itemIndex].json.customer_query,\n  \"documents\": $json.result.points.map(p => `[Doc: ${p.payload.doc_code} | Category: ${p.payload.category} | Title: ${p.payload.title}]\\n${p.payload.text}`),\n  \"top_n\": 15,\n  \"return_documents\": false\n}\n}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2200
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -32,
+        -1072
+      ],
+      "id": "node-09",
+      "name": "HTTP Req - Jina Reranker"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.routing_tier }}",
+                    "rightValue": "=Tier 1: Auto-Resolve",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "SANITIZED_UUID"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tier 1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "SANITIZED_UUID",
+                    "leftValue": "={{ $json.routing_tier }}",
+                    "rightValue": "Tier 2: Agent Assist",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tier 2"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "SANITIZED_UUID",
+                    "leftValue": "={{ $json.routing_tier }}",
+                    "rightValue": "Tier 3: Escalate to Human",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tier 3"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        -1040,
+        -560
+      ],
+      "id": "node-10",
+      "name": "Switch - 3-Tier Router"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "SANITIZED_UUID",
+              "leftValue": "={{\n  (() => {\n    try {\n      const raw = $json?.choices?.[0]?.message?.content;\n      if (!raw) return false;\n      const cleaned = raw.replace(/```json|```/g, '').trim();\n      const parsed = JSON.parse(cleaned);\n      return parsed.verification_passed === true;\n    } catch (e) {\n      return false;\n    }\n  })()\n}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -368,
+        -752
+      ],
+      "id": "node-11",
+      "name": "IF - Verification Passed?"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================================\n// VERIROUTE AI - STAGE 3: UNIFIED TELEMETRY, FAIL-CLOSED GUARD & PACKAGING\n// Mode: Run Once for Each Item\n// ============================================================================\n\nconst currentInput = $input.item.json;\nconst base = $('Code - Hybrid RRF Summary').item.json;\nconst tid = String(base.ticket_id || \"\").trim();\nconst initialTier = base.routing_tier || \"Fallback: Unroutable / No Candidates\";\n\n// 1. Helper: Fail-Closed Tier 1 Verifier Parser (Supports both schema formats)\nfunction parseVerifierResponse(rawVerifierJson) {\n  if (!rawVerifierJson || rawVerifierJson.error) {\n    const errMsg =\n      rawVerifierJson?.error?.message ||\n      rawVerifierJson?.error ||\n      \"HTTP timeout or network error on Verifier\";\n    return {\n      passed: false,\n      status: \"VERIFIER_TIMEOUT_OR_API_ERROR_HOLD_TIER2\",\n      violation: \"VERIFIER_API_OR_TIMEOUT_ERROR\",\n      explanation: `Fail-closed hold triggered: ${String(errMsg).slice(0, 160)}`\n    };\n  }\n\n  let rawContent = \"\";\n  if (\n    rawVerifierJson.choices &&\n    Array.isArray(rawVerifierJson.choices) &&\n    rawVerifierJson.choices[0]?.message?.content\n  ) {\n    rawContent = String(rawVerifierJson.choices[0].message.content).trim();\n  } else if (\n    typeof rawVerifierJson.verification_passed === \"boolean\" ||\n    typeof rawVerifierJson.verdict === \"string\"\n  ) {\n    rawContent = JSON.stringify(rawVerifierJson);\n  } else {\n    return {\n      passed: false,\n      status: \"VERIFIER_EMPTY_RESPONSE_HOLD_TIER2\",\n      violation: \"EMPTY_OR_UNRECOGNIZED_PAYLOAD\",\n      explanation: \"Verifier returned empty or unrecognized structure; holding for Tier 2 review.\"\n    };\n  }\n\n  // Strip optional markdown code fences safely before strict JSON.parse\n  const cleaned = rawContent\n    .replace(/^```(?:json)?\\s*/i, \"\")\n    .replace(/\\s*```$/i, \"\")\n    .trim();\n\n  try {\n    const parsed = JSON.parse(cleaned);\n    if (parsed === null || typeof parsed !== \"object\") {\n      return {\n        passed: false,\n        status: \"VERIFIER_INVALID_OBJECT_HOLD_TIER2\",\n        violation: \"INVALID_JSON_OBJECT\",\n        explanation: \"Verifier JSON was not a valid object; held for Tier 2.\"\n      };\n    }\n\n    // Normalize violation / failure reason across both prompt schemas\n    const violationVal = String(\n      parsed.violation_type || parsed.failure_reason || \"NONE\"\n    ).trim();\n\n    // Normalize explanation / audit notes across both prompt schemas\n    const explanationVal = String(\n      parsed.auditor_explanation || parsed.audit_notes || \"\"\n    ).trim();\n\n    // Check strict pass condition (accepts boolean verification_passed === true OR string verdict === \"PASS\")\n    const hasBooleanPass = parsed.verification_passed === true;\n    const hasStringPass = false; // strict boolean-only pass contract\n\n    const isNoViolation =\n      violationVal.toUpperCase() === \"NONE\" || violationVal === \"\";\n\n    const isStrictPass = (hasBooleanPass || hasStringPass) && isNoViolation;\n\n    if (isStrictPass) {\n      return {\n        passed: true,\n        status: \"VERIFIED_AUTO_SENT\",\n        violation: \"NONE\",\n        explanation:\n          explanationVal || \"Verified 100% grounded and temporally active.\"\n      };\n    } else {\n      return {\n        passed: false,\n        status: \"VERIFIER_REJECTED_HOLD_TIER2\",\n        violation:\n          violationVal !== \"NONE\" && violationVal !== \"\"\n            ? violationVal\n            : \"POLICY_OR_GROUNDING_FAILURE\",\n        explanation:\n          explanationVal || \"Verifier flagged draft; downgraded to Tier 2.\"\n      };\n    }\n  } catch (parseErr) {\n    return {\n      passed: false,\n      status: \"VERIFIER_MALFORMED_JSON_HOLD_TIER2\",\n      violation: \"MALFORMED_VERIFIER_JSON\",\n      explanation:\n        \"Verifier returned non-JSON text (substring bypass blocked); held for Tier 2.\"\n    };\n  }\n}\n\n// 2. Determine Execution Path & Extract Draft / Verifier Status\nlet finalOperationalAction = \"\";\nlet auditVerdict = \"\";\nlet finalGeneratedOutput = \"\";\nlet destinationQueue = \"\";\nlet slaTarget = \"\";\nlet estHandlingCostUsd = 0;\nlet hopCount = 0;\n\nif (initialTier === \"Tier 1: Auto-Resolve\") {\n  // Retrieve Tier 1 Customer Draft (supports both node naming conventions)\n  let draftText = \"\";\n  try {\n    const draftNodeJson = $('Tier 1 Customer Draft').item.json;\n    draftText =\n      draftNodeJson?.choices?.[0]?.message?.content ||\n      \"[Tier 1 Customer Draft Unavailable]\";\n  } catch (e1) {\n    try {\n      const draftNodeJson = $('HTTP Req - Tier 1 Customer Draft').item.json;\n      draftText =\n        draftNodeJson?.choices?.[0]?.message?.content ||\n        \"[Tier 1 Customer Draft Unavailable]\";\n    } catch (e2) {\n      draftText = \"[Tier 1 Customer Draft Error]\";\n    }\n  }\n\n  // Retrieve Tier 1 Verifier Response (supports both node naming conventions)\n  let verifierNodeJson = null;\n  try {\n    verifierNodeJson = $('Tier 1 Verifier').item.json;\n  } catch (e1) {\n    try {\n      verifierNodeJson = $('HTTP Req - Tier 1 Verifier').item.json;\n    } catch (e2) {\n      verifierNodeJson = { error: { message: \"Verifier node execution failed\" } };\n    }\n  }\n\n  // ============================================================================\n  // [FAULT INJECTION HOOKS: FI-01, FI-02, FI-03, FI-04, FI-08-EXPIRED]\n  // Injects exact simulated Verifier failures when ticket_id matches\n  // ============================================================================\n  if (tid === \"FI-01\") {\n    verifierNodeJson = {\n      error: {\n        message: \"Simulated 1ms ETIMEDOUT timeout on Tier 1 Verifier\"\n      }\n    };\n  } else if (tid === \"FI-02\") {\n    verifierNodeJson = {\n      choices: [\n        {\n          message: {\n            content:\n              \"Sure! The customer draft looks accurate and polite. Approved! (Non-JSON response)\"\n          }\n        }\n      ]\n    };\n  } else if (tid === \"FI-03\") {\n    verifierNodeJson = {\n      choices: [\n        {\n          message: {\n            content:\n              'Auditor review note: \"verification_passed\": true appears as a substring here, but this is NOT valid JSON and must be blocked!'\n          }\n        }\n      ]\n    };\n  } else if (tid === \"FI-04\") {\n    verifierNodeJson = {\n      error: {\n        message:\n          \"Request failed with status code 500 (Simulated OpenRouter Bad Endpoint)\"\n      }\n    };\n  } else if (tid === \"FI-08\" || tid === \"FI-08-EXPIRED\") {\n    verifierNodeJson = {\n      choices: [\n        {\n          message: {\n            content: JSON.stringify({\n              verification_passed: false,\n              violation_type: \"EXPIRED_OR_INACTIVE_POLICY\",\n              auditor_explanation:\n                \"Temporal validity check failed (As of 2026-11-09): Referenced promo/policy expired on 2024-12-31.\"\n            })\n          }\n        }\n      ]\n    };\n  }\n\n  const vResult = parseVerifierResponse(verifierNodeJson);\n\n  if (vResult.passed) {\n    // Path A: Tier 1 Verified & Auto-Sent (0 Downgrade Hops)\n    hopCount = 0;\n    destinationQueue = \"AUTO_DISPATCHED_CUSTOMER\";\n    slaTarget = \"< 5 sec (Instant Auto-Reply)\";\n    estHandlingCostUsd = 0.003;\n    finalOperationalAction = `Tier 1: Auto-Sent to Customer [Queue: ${destinationQueue} | SLA: ${slaTarget} | Hops: ${hopCount} | Cost: $${estHandlingCostUsd.toFixed(3)}]`;\n    auditVerdict = `PASS (${vResult.status}): ${vResult.explanation}`;\n    finalGeneratedOutput = draftText;\n  } else {\n    // Path B: Tier 1 Failed Verification -> Single-Hop Downgrade to Tier 2 Copilot\n    hopCount = 1; // Maximum 1 automated hop (prevents cascading ping-pong)\n    destinationQueue = \"TIER2_COPILOT_REVIEW_QUEUE\";\n    slaTarget = \"< 15 min (Agent Copilot Review)\";\n    estHandlingCostUsd = 1.50;\n\n    let copilotNote = \"\";\n    const currentNodeText = currentInput?.choices?.[0]?.message?.content || \"\";\n    if (\n      currentNodeText &&\n      currentNodeText !== draftText &&\n      !currentNodeText.includes('\"verification_passed\"') &&\n      !currentNodeText.includes('\"verdict\"')\n    ) {\n      copilotNote = `\\n\\n--- TIER 2 AGENT COPILOT BRIEF ---\\n${currentNodeText}`;\n    }\n\n    finalOperationalAction = `Downgraded Tier 1 -> Tier 2 Hold (Hops: ${hopCount}/1) [Queue: ${destinationQueue} | SLA: ${slaTarget} | Cost: $${estHandlingCostUsd.toFixed(2)}]`;\n    auditVerdict = `HOLD_FOR_HUMAN (${vResult.status} | ${vResult.violation}): ${vResult.explanation}`;\n    finalGeneratedOutput = `[HELD FOR TIER 2 AGENT REVIEW — NOT SENT TO CUSTOMER]\\n\\n--- HELD TIER 1 DRAFT ---\\n${draftText}${copilotNote}`;\n  }\n} else if (initialTier === \"Tier 2: Agent Assist / Copilot\") {\n  // Path C: Native Tier 2 Copilot Route\n  hopCount = 0;\n  destinationQueue = \"TIER2_COPILOT_REVIEW_QUEUE\";\n  slaTarget = \"< 15 min (Agent Copilot Review)\";\n  estHandlingCostUsd = 1.50;\n  const copilotOutput =\n    currentInput?.choices?.[0]?.message?.content ||\n    \"[Tier 2 Copilot Output Unavailable]\";\n\n  finalOperationalAction = `Tier 2: Routed to Agent Copilot [Queue: ${destinationQueue} | SLA: ${slaTarget} | Hops: ${hopCount} | Cost: $${estHandlingCostUsd.toFixed(2)}]`;\n  auditVerdict = `N/A — Native Tier 2 Route (Interval: ${base.boundary_interval || \"[0.2200, 0.4500)\"})`;\n  finalGeneratedOutput = copilotOutput;\n} else if (\n  initialTier === \"Tier 3: Escalate to Human\" ||\n  initialTier === \"Tier 3: Human Escalation\"\n) {\n  // Path D: Native Tier 3 Human Escalation Route\n  hopCount = 0;\n  destinationQueue = \"TIER3_SENIOR_ESCALATION_QUEUE\";\n  slaTarget = \"< 2 hours (Senior Specialist)\";\n  estHandlingCostUsd = 6.00;\n\n  finalOperationalAction = `Tier 3: Escalated to Human Specialist [Queue: ${destinationQueue} | SLA: ${slaTarget} | Hops: ${hopCount} | Cost: $${estHandlingCostUsd.toFixed(2)}]`;\n  auditVerdict = `TIER3_LOW_CONFIDENCE_ESCALATION (Score ${base.blended_score} in ${base.boundary_interval || \"[0.0000, 0.2200)\"})`;\n  finalGeneratedOutput =\n    `[ESCALATED TO ${destinationQueue} — NO AI DRAFT SENT]\\n` +\n    `Blended Score: ${base.blended_score} (Threshold < 0.2200)\\n` +\n    `Top Candidate Snippets for Triage:\\n${base.s2_top_3_distinct_codes || base.s2_top_5_reranked}`;\n} else {\n  // Path E: Switch Fallback Output (\"Give Up Loudly\" Dead-Letter Guard — FI-07-NAN / FI-07-NULL)\n  hopCount = 0;\n  destinationQueue = \"TIER3_SENIOR_ESCALATION_QUEUE\";\n  slaTarget = \"< 30 min (Fallback Dead-Letter Pager)\";\n  estHandlingCostUsd = 6.00;\n\n  finalOperationalAction = `FALLBACK ESCALATION: Unroutable/Corrupted Tier [Queue: ${destinationQueue} | SLA: ${slaTarget} | Cost: $${estHandlingCostUsd.toFixed(2)}]`;\n  auditVerdict = `FALLBACK_GIVE_UP_LOUDLY (Invalid routing_tier: \"${initialTier}\")`;\n  finalGeneratedOutput =\n    `[DEAD-LETTER FALLBACK ALERT -> ${destinationQueue}]\\n` +\n    `Ticket failed normal tier routing (routing_tier=\"${initialTier}\", blended_score=${base.blended_score}). Assigned to Senior Queue.`;\n}\n\n// 3. Return Exact 12 Schema Columns for Upsert row(s) & Google Sheet WebApp\nreturn {\n  json: {\n    ticket_id: tid || \"UNKNOWN_TICKET\",\n    customer_query: String(base.customer_query || \"\"),\n    expected_policy_id: String(base.expected_policy_id || \"\"),\n    s1_top_1_id: String(base.s1_top_1_id || \"NONE\"),\n    s2_top_1_id: String(base.s2_top_1_id || \"NONE\"),\n    s2_top_1_title: String(base.s2_top_1_title || \"\"),\n    blended_score: Number.isNaN(base.blended_score)\n      ? \"NaN\"\n      : Number(base.blended_score ?? 0),\n    routing_tier: String(initialTier),\n    final_operational_action: finalOperationalAction,\n    audit_verdict: auditVerdict,\n    final_generated_output: finalGeneratedOutput,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        -672
+      ],
+      "id": "node-12",
+      "name": "Code - Stage 3 Telemetry & Packaging"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_API_KEY_HERE"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "https://n8n.io"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  JSON.stringify({\n    model: \"meta-llama/llama-3.3-70b-instruct\",\n    temperature: 0.1,\n    messages: [\n      {\n        role: \"system\",\n        content: \"You are a professional Tier 1 customer resolution agent. Answer the customer directly and concisely using ONLY the provided policy snippet. Cite policy rule codes if present. Do not invent terms.\"\n      },\n      {\n        role: \"user\",\n        content: \"Customer Query: \" + ($json.customer_query || \"\") + \"\\n\\nPolicy Reference Context:\\n\" + ($json.s2_top_1_full_text || \"\")\n      }\n    ]\n  })\n}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -816,
+        -752
+      ],
+      "id": "node-13",
+      "name": "HTTP Req - Tier 1 Customer Draft",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_API_KEY_HERE"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "https://n8n.io"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  JSON.stringify({\n    model: \"meta-llama/llama-3.3-70b-instruct\",\n    messages: [\n      {\n        role: \"system\",\n        content: \"You are the VeriRoute Tier 1 Policy Verification Judge. Today's date is 2026-11-09. Verify whether the provided AI Draft strictly adheres to the Ground Truth Policy without hallucinations, contradictions, or expired policies.\\nReturn ONLY valid JSON matching this schema:\\n{\\n  \\\"verification_passed\\\": true,\\n  \\\"violation_type\\\": \\\"NONE\\\",\\n  \\\"auditor_explanation\\\": \\\"brief explanation\\\"\\n}\\nIf it fails or references an expired policy/date, return:\\n{\\n  \\\"verification_passed\\\": false,\\n  \\\"violation_type\\\": \\\"FACTUAL_HALLUCINATION\\\" | \\\"POLICY_CONTRADICTION\\\" | \\\"EXPIRED_OR_INACTIVE_POLICY\\\",\\n  \\\"auditor_explanation\\\": \\\"brief explanation\\\"\\n}\"\n      },\n      {\n        role: \"user\",\n        content: \"CUSTOMER QUERY: \" + $('Code - Hybrid RRF Summary').item.json.customer_query + \"\\n\\nGROUND TRUTH POLICY CONTEXT:\\n\" + $('Code - Hybrid RRF Summary').item.json.s2_top_1_full_text + \"\\n\\nCANDIDATE AI DRAFT TO VERIFY:\\n\" + ($json.choices?.[0]?.message?.content || \"\")\n      }\n    ],\n    temperature: 0.0,\n    response_format: { type: \"json_object\" }\n  })\n}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -592,
+        -752
+      ],
+      "id": "node-14",
+      "name": "HTTP Req - Tier 1 Verifier",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_API_KEY_HERE"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "https://n8n.io"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  JSON.stringify({\n    model: \"meta-llama/llama-3.3-70b-instruct\",\n    messages: [\n      {\n        role: \"system\",\n        content: \"You are an AI Copilot assisting human customer service agents. Provide a helpful, structured internal draft summarizing the applicable policy options and next steps for the agent to review.\"\n      },\n      {\n        role: \"user\",\n        content: \"CUSTOMER QUERY: \" + $('Code - Hybrid RRF Summary').item.json.customer_query + \"\\n\\nTOP CANDIDATE POLICIES:\\n\" + ($('Code - Hybrid RRF Summary').item.json.s2_top_3_distinct_codes || \"\") + \"\\n\\nTOP POLICY FULL TEXT:\\n\" + ($('Code - Hybrid RRF Summary').item.json.s2_top_1_full_text || \"\")\n      }\n    ],\n    temperature: 0.1\n  })\n}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -176,
+        -464
+      ],
+      "id": "node-15",
+      "name": "HTTP Req - Tier 2 Agent Copilot",
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "HTTP Req - Get Dense Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Req - Get Dense Embedding": {
+      "main": [
+        [
+          {
+            "node": "HTTP Req - Qdrant Hybrid Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Req - Qdrant Hybrid Search": {
+      "main": [
+        [
+          {
+            "node": "HTTP Req - Jina Reranker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Hybrid RRF Summary": {
+      "main": [
+        [
+          {
+            "node": "Switch - 3-Tier Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert row(s)": {
+      "main": [
+        [
+          {
+            "node": "HTTP Req - Update Google Sheet WebApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Req - Jina Reranker": {
+      "main": [
+        [
+          {
+            "node": "Code - Hybrid RRF Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch - 3-Tier Router": {
+      "main": [
+        [
+          {
+            "node": "HTTP Req - Tier 1 Customer Draft",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Req - Tier 2 Agent Copilot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code - Stage 3 Telemetry & Packaging",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code - Stage 3 Telemetry & Packaging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Verification Passed?": {
+      "main": [
+        [
+          {
+            "node": "Code - Stage 3 Telemetry & Packaging",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Req - Tier 2 Agent Copilot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Req - Tier 1 Customer Draft": {
+      "main": [
+        [
+          {
+            "node": "HTTP Req - Tier 1 Verifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Req - Tier 1 Verifier": {
+      "main": [
+        [
+          {
+            "node": "IF - Verification Passed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Req - Tier 2 Agent Copilot": {
+      "main": [
+        [
+          {
+            "node": "Code - Stage 3 Telemetry & Packaging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Stage 3 Telemetry & Packaging": {
+      "main": [
+        [
+          {
+            "node": "Upsert row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "id": "SANITIZED_WORKFLOW_ID"
+}

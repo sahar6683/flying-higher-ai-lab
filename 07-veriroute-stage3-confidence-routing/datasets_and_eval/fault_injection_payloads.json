@@ -1,0 +1,45 @@
+[
+  {
+    "id": "FI-05-04499",
+    "case": "0.4499 boundary edge",
+    "input": {
+      "blended_score": 0.4499
+    },
+    "expected": "Tier 2; no boundary ambiguity"
+  },
+  {
+    "id": "FI-07-NAN-NULL",
+    "case": "NaN/null dead-letter fallback",
+    "input": {
+      "blended_score": "NaN",
+      "routing_tier": null
+    },
+    "expected": "ROUTING_ERROR_FALLBACK; senior queue; record system fault"
+  },
+  {
+    "id": "FI-03-SUBSTRING",
+    "case": "adversarial substring spoof",
+    "input": {
+      "verifier_content": "Auditor text says \\\"verification_passed\\\": true but is not JSON"
+    },
+    "expected": "Strict parse fails; no customer send; Tier 2 hold"
+  },
+  {
+    "id": "FI-02-TRUNCATED",
+    "case": "truncated JSON stream",
+    "input": {
+      "verifier_content": "{\\\"verification_passed\\\": tru"
+    },
+    "expected": "JSON.parse fails; fail closed to Tier 2 hold"
+  },
+  {
+    "id": "FI-08-EXPIRED-AND-TIMEOUT",
+    "case": "expired 2024 policy temporal drift plus verifier HTTP timeout",
+    "input": {
+      "system_reference_date": "2026-11-09",
+      "policy_effective_to": "2024-12-31",
+      "verifier_error": "ETIMEDOUT"
+    },
+    "expected": "No auto-send; hold for human review; log EXPIRED_OR_INACTIVE_POLICY / VERIFIER_HTTP_ERROR_FAIL_CLOSED"
+  }
+]

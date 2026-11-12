@@ -47,6 +47,8 @@ Six rules govern every project in this lab:
 | 04 | [Northstar Support RAG Knowledge Base (Qdrant + JEV)](./04-rag-knowledge-base-qdrant-jev) | n8n · Qdrant · OpenAI embeddings · Gemini 2.5 Pro · OpenRouter · JEV · Sheets · Slack | ✅ Live | Three-stage evolution: Drive→Qdrant ingestion, baseline RAG, and production RAG with **JEV grounding gate** + Slack escalation. Zero hallucinated answers shipped to users. |
 | 05 | [Intelligent Customer Operations (Multimodal RAG)](./05-intelligent-customer-ops-multimodal-rag) | n8n · Qdrant · OpenAI embeddings · OpenAI Vision (gpt-5-mini) · Gemini · Sheets · Data Tables | ✅ Live | End-to-end auditable multimodal RAG: photo inspection **before** policy eval, structured 4-bucket triage, full audit trail in Sheets + Data Tables. Companion Matryoshka benchmark (OpenAI vs EmbeddingGemma 2 at 768/512/256/128d) justifies the production `top-k=4, dimensions=768` choice. |
 | 06 | [Hybrid RAG Retrieval Benchmark](./06-hybrid-rag-retrieval-benchmark) | Python · BM25 · EmbeddingGemma 2 · BGE · OpenAI embeddings · RRF · Cross-encoders | ✅ Benchmark documented | 100-policy / 250-ticket retrieval stress test: lexical vs dense, hybrid fusion, MiniLM residual reranking, and BGE-Reranker-v2-m3 validation; best reported residual Recall@5 94.4%, Recall@10 94.8%. |
+| 07 | [VeriRoute AI — Stage 3 Confidence Routing](./veriroute-stage3-confidence-routing) | n8n · Qdrant Hybrid RRF · Jina Reranker · Llama 3.3 · Python | 🧪 Holdout + fault-injection package | Fail-closed 3-tier confidence routing with strict JSON verification, temporal checks, human copilot/escalation, 150-query audit and explicit reproducibility caveats. |
+---
 ---
 
 ## 📁 Repository layout
@@ -64,6 +66,7 @@ flying-higher-ai-lab/
 ├── 04-rag-knowledge-base-qdrant-jev/
 ├── 05-intelligent-customer-ops-multimodal-rag/
 └── 06-hybrid-rag-retrieval-benchmark/
+└── 07-veriroute-stage3-confidence-routing/
 
 ```
 
@@ -138,10 +141,13 @@ Every system in this repository is paired with a deep-dive engineering case stud
 
 - **<a href="https://flyinghigherai.substack.com/p/scaling-enterprise-rag-what-breaks" target="_blank" rel="noopener noreferrer">09 — Scaling Enterprise RAG: What Breaks, What Fails Silently, and How to Fix It ↗</a>**  
  HMoving from 10 to 100 documents: how we diagnosed broken retrieval stages and pushed recall to 94.8%.
+
 - **<a href="https://flyinghigherai.substack.com/p/building-a-production-evaluation" target="_blank" rel="noopener noreferrer">10 — Building a Production Evaluation Harness & Calibrated Two-Stage AI Retrieval Engine in n8n ↗</a>**  
 How I benchmarked 250 queries across Qdrant Hybrid RRF and Jina Reranker v2 to replace LLM routers with deterministic math.
 
-
+- **<a href="https://flyinghigherai.substack.com/p/trying-to-break-my-own-rag-pipeline" target="_blank" rel="noopener noreferrer">11 — Trying to Break My Own RAG Pipeline: Fault Injection, Confidence Gating, and the 150-Query Holdout Test ↗</a>**  
+How I combined Qdrant, Jina Reranker v2, and a fail-closed 3-Tier Router with a Llama-3.3-70B Verifier to turn hybrid retrieval into a zero-hallucination production system.
+ 
 👉 **Subscribe & read the full publication:** **[flyinghigherai.substack.com](https://flyinghigherai.substack.com/)**
 ---
 ### Skills matrix

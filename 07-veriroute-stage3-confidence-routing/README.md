@@ -22,7 +22,7 @@ flowchart LR
   H --> L; I --> L; J --> L; K --> L
 ```
 
-![Verifier fail-closed circuit breaker](assets/verifier_circuit_breaker.png)
+![Verifier fail-closed circuit breaker](assets/verifier_circuit_breaker_pink_hero.png)
 
 ## Executive summary
 

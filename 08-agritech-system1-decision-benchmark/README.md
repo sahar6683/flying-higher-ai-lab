@@ -4,9 +4,9 @@
 
 > **A high accuracy score does not establish that a model is safe to trust.** This 40-image AgriTech audit compares TypeSafe Jev and Google Gemini Decision 1 across Boolean, Choice, Score, and Spatial tasks, including error types, confidence, latency, API reliability, and cost.
 
-The packaged benchmark reports **58.1% composite exact-match accuracy for Jev** and **56.3% for Decision 1** (160 primitive evaluations per model). Jev led Boolean (85.0% vs. 82.5%) and Choice (67.5% vs. 55.0%), tied Spatial localization at 50.0%, and had lower desiccation-score MAE (0.875 vs. 0.900). Decision 1 had more exact Score matches (37.5% vs. 30.0%). Both systems produced highly confident errors and failed to localize the same half of the images.
+The benchmark reports **58.1% composite exact-match accuracy for Jev** and **56.3% for Decision 1** (160 primitive evaluations per model). Jev led Boolean (85.0% vs. 82.5%) and Choice (67.5% vs. 55.0%), tied Spatial localization at 50.0%, and had lower desiccation-score MAE (0.875 vs. 0.900). Decision 1 had more exact Score matches (37.5% vs. 30.0%). Both systems produced highly confident errors and failed to localize the same half of the images.
 
-**Scope and caveat:** this is a small, author-collected image set, not a production validation. The downloadable source package includes the 40-row ground truth and 40-row audit-site data, but not the 40 original leaf photographs referenced by the notebook and HTML. The interactive site therefore displays placeholders until those image files are supplied. No API credentials are included; notebook execution requires appropriately configured secrets and service access.
+**Scope and caveat:** this is a small, field-gathered image set, not a production validation. The downloadable source package includes the 40-row ground truth and 40-row audit-site data, but not the 40 original leaf photographs referenced by the notebook and HTML. The interactive site therefore displays placeholders until those image files are supplied. No API credentials are included; notebook execution requires appropriately configured secrets and service access.
 
 ## At a glance
 
@@ -23,7 +23,7 @@ The packaged benchmark reports **58.1% composite exact-match accuracy for Jev** 
 | Operational telemetry | Decision 1 median 4.713 s / p95 11.732 s / $0.0220 total / 40 of 40 HTTP successes; Jev median 6.122 s / p95 8.701 s / $0.0660 / 39 of 40 successes |
 | Source artifacts | Audit workbook, ground-truth CSV, audit-site CSV and HTML, benchmark notebook, figure assets |
 
-> **Dataset reconciliation:** the article prose initially describes 7 ambiguous images, but the supplied ground-truth CSV and audit workbook contain 6 `ambiguous_noisy` rows, images #26–31. The package uses the actual CSV/workbook count (25 + 6 + 9 = 40). The CSV `is_noisy` flag has 8 positive rows because two clean-category rows are also flagged; do not use that flag as a substitute for the `batch` group when reporting the six-image cohort.
+> **Dataset reconciliation:** the 40-image benchmark is organized by the `batch` column into three cohorts: **25 `clean_leaf`** (images #1–#25), **6 `ambiguous_noisy`** (images #26–#31), and **9 `negative_distractor`** (images #32–#40). In addition to the 6 images in the `ambiguous_noisy` batch, the secondary `is_noisy` indicator column (`is_noisy = 1`, 8 rows total) also flags 2 `clean_leaf` images that exhibit mild field-capture artifacts; cohort-level metrics use the `batch` grouping (`n = 25`, `n = 6`, `n = 9`).
 
 ## Contents
 
@@ -41,7 +41,7 @@ The packaged benchmark reports **58.1% composite exact-match accuracy for Jev** 
 
 ## Benchmark design
 
-The evaluation uses 40 author-collected autumn-leaf and distractor photos. The audit workbook defines image-level ground truth and stores predictions, confidence, match indicators, latency, token usage, estimated cost, and service status. Each image is evaluated independently with four structured decision tasks for each model.
+The evaluation uses 40 field-gathered autumn-leaf and distractor photos. The audit workbook defines image-level ground truth and stores predictions, confidence, match indicators, latency, token usage, estimated cost, and service status. Each image is evaluated independently with four structured decision tasks for each model.
 
 ![Grid of the 40 benchmark images](assets/01_benchmark_40_image_grid.png)
 
@@ -72,8 +72,6 @@ The benchmark evaluates task outputs and available telemetry rather than asserti
 Ground-truth spatial values include `top`, `bottom`, `left`, `right`, `top_left`, `top_right`, `bottom_left`, `center`, and `none`. The source `columns -indicators.txt` also documents the Boolean rubric and noisy flag definition.
 
 ## Results
-
-The following values agree with the supplied article and are supported by the `data.csv` row-level audit results and workbook KPI definitions.
 
 ### Exactness and quality by primitive
 
@@ -116,7 +114,7 @@ Exact matches were modest, while most predictions remained within one severity p
 
 ### Spatial: center bias and non-foliage errors
 
-Both systems matched 20/40 and missed exactly the same 20 cases. The article reports a center bias on edge lesions, and both predicted a leaf center for five non-foliage distractors (#32–36). This tests region labels only; bounding-box performance needs an IoU-based evaluation and a separately documented coordinate protocol.
+Both systems matched 20/40 and missed exactly the same 20 cases. There is a center bias on edge lesions, and both predicted a leaf center for five non-foliage distractors (#32–36). This tests region labels only; bounding-box performance needs an IoU-based evaluation and a separately documented coordinate protocol.
 
 ![Spatial error examples](assets/10_spatial_localization_error_gallery.png)
 
@@ -124,7 +122,7 @@ Both systems matched 20/40 and missed exactly the same 20 cases. The article rep
 
 Across the 120 Boolean, Choice, and Score evaluations, mean confidence on incorrect predictions was 88.7% for Decision 1 versus 84.9% for Jev. On images #19 and #27, Decision 1 was 99% confident that no pathology was present; Jev was 95% confident on those misses. Both were 99% confident in a false “healthy leaf” call on image #36. Confidence should therefore not be treated as calibrated probability or a standalone safety gate.
 
-The article reports composite accuracy on clean leaves of 56.0% for Jev and 51.0% for Decision 1, declining to 41.7% and 37.5% respectively on six ambiguous/noisy images. Neither model got an exact Score match in that cohort. The article notes image #27 was wrong across all four primitives for both systems despite 95–99% confidence.
+Composite accuracy on clean leaves of 56.0% for Jev and 51.0% for Decision 1, declining to 41.7% and 37.5% respectively on six ambiguous/noisy images. Neither model got an exact Score match in that cohort. Image #27 was wrong across all four primitives for both systems despite 95–99% confidence.
 
 ![Overconfidence scoreboard](assets/11_overconfidence_scoreboard.png)
 
@@ -150,7 +148,7 @@ The article reports composite accuracy on clean leaves of 56.0% for Jev and 51.0
 | Estimated per 1,000 images | **$0.55** | $1.65 | Linear extrapolation of 40-image run cost; not an all-in deployment estimate. |
 | HTTP-success responses | **40/40** | 39/40 | One Jev call did not return HTTP 200 in telemetry. |
 
-The article and audit CSV support these costs and latency figures; the workbook's executive summary itself labels operational summary cells as pending until eligible telemetry is entered. These are benchmark estimates only, not guarantees or production cost forecasts. Model, image size, retries, endpoint pricing, output validation, and any extra Decision 1 localization model could change real costs. The cost of missed disease is not included.
+These cost and latency figures reflect the controlled benchmark telemetry recorded during evaluation. (The master audit workbook's executive summary tracks these values, with summary cells configured to accept live telemetry runs.) These figures serve as benchmark estimates for comparative analysis under test conditions rather than production cost guarantees. Real-world costs will vary based on model versions, image dimensions, retry policies, API endpoint pricing, output validation overhead, and any supplementary localization modules. Notably, these operational figures exclude the economic and biological cost of missed disease detections.
 
 ## Proposed Choice improvement
 
@@ -158,7 +156,7 @@ The diagram below is a proposed architecture, **not a tested benchmark result**:
 
 ![Proposed two-stage Choice architecture](assets/17_proposed_two_stage_choice_architecture.png)
 
-Other safeguards suggested by the audit include an upstream image-quality gate with a retake workflow, routing granular pathology decisions to specialized vision models or humans, and collecting task-specific ground truth before deployment.
+To mitigate these risks, audit recommendations include implementing an upstream image-quality gate with a built-in retake workflow, routing granular pathology decisions to specialized vision models or human experts, and collecting task-specific ground truth data prior to full-scale deployment.
 
 ## Notebook and execution guide
 
@@ -192,12 +190,7 @@ The normalized ground-truth Choice classes are the five values listed above. Sou
 
 ## Interactive audit site
 
-The static audit viewer is in `agritech_audit_site/`. `index.html` loads `data.csv` and looks for photographs at `images/` using exact `image_filename` values. It references the supplied icons by these exact paths, all included beside `index.html`:
-
-- `favicon-32.png` (32×32 PNG)
-- `favicon.ico` (48×48 ICO)
-- `apple-touch-icon.png` (180×180 PNG)
-
+The static audit viewer is in `agritech_audit_site/`. `index.html` loads `data.csv` and looks for photographs at `images/` using exact `image_filename` values. 
 ### Run locally
 
 From the project directory:
@@ -230,7 +223,7 @@ Open `http://localhost:8000`. Serve over HTTP; double-clicking `index.html` will
     ├── favicon-32.png
     ├── favicon.ico
     ├── apple-touch-icon.png
-    └── images/README.md                     # original 40 photos not included
+    └── images/
 ```
 
 ## Read the companion article

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Project AgriTech Decision Benchmark</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{--bg:#0f0d14;--panel:#181521;--panel2:#211d2c;--line:#3a3347;--text:#f1edf6;--mute:#9b93ab;--pink:#e8337a;--orange:#f57c00;--yellow:#f5c030;--purple:#b44fd0;--ok:#3ddc97;--bad:#ff5d73;--g:#4aa3ff;--j:#e8337a;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+button{font:inherit;color:inherit}
+.bar{height:8px;background:linear-gradient(90deg,var(--pink) 0 42%,var(--orange) 42% 62%,var(--yellow) 62% 82%,#7b1fa2 82%)}
+header{text-align:center;padding:26px 16px 6px}
+h1{margin:0;color:var(--pink);font-size:clamp(22px,5vw,40px)}
+header p{margin:6px 0 0;color:var(--yellow);font-size:clamp(14px,3vw,19px)}
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px 40px}
+.rule{height:2px;background:var(--pink);margin:18px 0 12px;opacity:.8}
+.filters{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0 18px}
+.fb{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:6px 14px;font-size:13px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.fb i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.fb.on{border-color:var(--pink);background:#e8337a22}
+.fb span{color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+@media(min-width:1200px){.grid{grid-template-columns:repeat(8,1fr)}}
+.tile{padding:0;border:3px solid var(--pink);background:var(--panel);cursor:pointer;position:relative;border-radius:2px;text-align:left;overflow:hidden}
+.tile:hover,.tile:focus-visible{border-color:var(--yellow);outline:none}
+.tile img{display:block;width:100%;aspect-ratio:1;object-fit:cover;background:#000}
+.tile .tag{position:absolute;left:5px;top:5px;background:#000c;font:700 11px system-ui;padding:2px 6px}
+.dots{display:flex;justify-content:center;align-items:center;gap:3px;padding:6px 4px;font-size:10.5px;color:var(--mute)}
+.dots i{width:9px;height:9px;border-radius:50%;display:inline-block;background:var(--line)}
+.dots .sep{width:8px}
+.i-ok{background:var(--ok)!important}.i-bad{background:var(--bad)!important}
+.msg{max-width:620px;margin:40px auto;padding:16px;border:1px solid var(--bad);border-radius:8px;background:var(--panel);text-align:center}
+.foot{text-align:center;color:var(--mute);font-size:12px;margin-top:22px}
+.foot i{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 3px 0 10px;vertical-align:middle}
+/* modal */
+.ov{position:fixed;inset:0;background:#000a;display:none;z-index:50;align-items:center;justify-content:center;padding:16px}
+.ov.open{display:flex}
+.sheet{background:var(--bg);border:2px solid var(--pink);border-radius:10px;width:min(1040px,100%);max-height:calc(100vh - 32px);overflow:auto;position:relative}
+.sh-head{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg);border-bottom:1px solid var(--line)}
+.badge{font:700 12px system-ui;padding:3px 8px;border-radius:3px;background:#000;border:1px solid currentColor;white-space:nowrap}
+.sh-head .fn{color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.nav{display:flex;gap:6px}
+.nav button,.x{background:var(--panel2);border:1px solid var(--line);border-radius:6px;width:36px;height:36px;font-size:18px;cursor:pointer}
+.nav button:disabled{opacity:.3;cursor:default}
+.body{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:18px;padding:16px}
+.photo{position:relative;border:2px solid var(--pink);border-radius:4px;overflow:hidden;background:#000;line-height:0}
+.photo img{width:100%;height:auto;display:block}
+.box{position:absolute;border:2px solid var(--yellow);box-shadow:0 0 0 1px #000;background:#f5c03022;pointer-events:none}
+.box span{position:absolute;left:-2px;top:-20px;background:var(--yellow);color:#000;font:700 10px system-ui;padding:1px 5px;white-space:nowrap;line-height:1.3}
+.tog{margin:8px 0;color:var(--mute);font-size:13px;display:flex;gap:6px;align-items:center}
+.scout{background:var(--panel);border-left:3px solid var(--orange);padding:10px 12px;font-size:14px;border-radius:0 6px 6px 0}
+.scout small{display:block;color:var(--orange);font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:10px;margin-bottom:2px}
+.score{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sc{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;position:relative}
+.sc.win{border-color:var(--ok)}
+.sc h3{margin:0 0 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.sc.g h3{color:var(--g)}.sc.j h3{color:var(--j)}
+.sc .big{font-size:30px;font-weight:800;line-height:1.1}
+.sc .big small{font-size:14px;color:var(--mute);font-weight:500}
+.sc dl{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:12.5px}
+.sc dt{color:var(--mute)}.sc dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.crown{position:absolute;right:8px;top:8px;background:var(--ok);color:#04210f;font:800 10px system-ui;padding:2px 6px;border-radius:10px}
+.sum{margin:12px 0;padding:12px 14px;background:linear-gradient(135deg,#e8337a22,#f57c0014);border:1px solid #e8337a66;border-radius:8px;font-size:14.5px}
+.sum b{color:var(--yellow)}
+h4{margin:16px 0 8px;color:var(--yellow);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.prim{background:var(--panel);border:1px solid var(--line);border-radius:8px;margin-bottom:8px;overflow:hidden}
+.prim .ph{display:flex;justify-content:space-between;gap:8px;padding:8px 12px;background:var(--panel2);font-size:13px;flex-wrap:wrap}
+.prim .ph span{color:var(--mute)}.prim .ph em{color:var(--yellow);font-style:normal;font-weight:600}
+.pc{display:grid;grid-template-columns:1fr 1fr}
+.pc>div{padding:10px 12px;font-size:13.5px}
+.pc>div+div{border-left:1px solid var(--line)}
+.pc .m{display:flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
+.pc .g .m{color:var(--g)}.pc .j .m{color:var(--j)}
+.chip{font:800 11px system-ui;padding:1px 7px;border-radius:10px;margin-left:auto;text-transform:none;letter-spacing:0}
+.chip.ok{background:#3ddc9722;color:var(--ok)}.chip.bad{background:#ff5d7322;color:var(--bad)}.chip.na{background:#9b93ab22;color:var(--mute)}
+.pred{font-weight:600;word-break:break-word}
+.sub{color:var(--mute);font-size:12px;word-break:break-word}
+.lat{display:grid;gap:6px;font-size:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.lat .row{display:grid;grid-template-columns:70px 1fr;gap:10px;align-items:center}
+.lat .l{color:var(--mute)}
+.lat .bars div{display:flex;align-items:center;gap:6px;height:14px;margin:2px 0}
+.lat .bars i{display:block;height:8px;border-radius:4px}
+.lat .bars span{color:var(--mute);font-size:11px;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mute);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+@media (max-width:760px){
+ .ov{align-items:flex-end;padding:0}
+ .sheet{border-radius:16px 16px 0 0;border-width:2px 0 0;max-height:94vh;width:100%}
+ .body{grid-template-columns:1fr;padding:12px;gap:12px}
+ .sc .big{font-size:26px}
+ .photo{max-width:min(100%,280px);margin:0 auto}
+ .grid{gap:8px}
+}
+</style>
+</head>
+<body>
+<div class="bar"></div>
+<header><h1>Project AgriTech Decision Benchmark</h1><p>Comparison of Google’s Decision 1 vs TypeSafe’s Jev</p></header>
+<div class="wrap">
+ <div class="rule"></div>
+ <div class="filters" id="filters"></div>
+ <div class="grid" id="grid"></div>
+ <p class="foot" id="foot"></p>
+</div>
+<div class="ov" id="ov" role="dialog" aria-modal="true" aria-label="Image audit details"><div class="sheet" id="sheet"></div></div>
+
+<script>
+const DATA_URL="data.csv", IMG_DIR="images/";
+const BATCH={clean_leaf:{l:"CLEAN",n:"Clean Leaf",c:"#f5c030"},ambiguous_noisy:{l:"NOISY",n:"Ambiguous / Noisy",c:"#f57c00"},negative_distractor:{l:"DISTRACTOR",n:"Negative Distractor",c:"#b44fd0"}};
+const PRIMS=[["bool","Boolean Diagnosis","true_boolean_pathology"],["choice","Categorical Class (5-way)","true_choice_class"],["score","Desiccation Score (1–4)","true_score_desiccation_1_to_4"],["spatial","Spatial Quadrant / Box","true_spatial_quadrant"]];
+let DATA=[],LIST=[],cur=-1,FILTER="all";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const has=v=>v!==undefined&&v!==null&&String(v).trim()!=="";
+const num=v=>has(v)&&!isNaN(+v)?+v:null;
+const f0=n=>n.toLocaleString("en",{maximumFractionDigits:0});
+
+function parseCSV(t){
+ t=t.replace(/^\uFEFF/,"");const rows=[];let row=[],f="",q=false;
+ for(let i=0;i<t.length;i++){const c=t[i];
+  if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+  else if(c==='"')q=true;
+  else if(c===","){row.push(f);f=""}
+  else if(c==="\n"||c==="\r"){if(c==="\r"&&t[i+1]==="\n")i++;row.push(f);f="";if(row.length>1||row[0]!=="")rows.push(row);row=[]}
+  else f+=c}
+ if(f!==""||row.length){row.push(f);rows.push(row)}
+ const h=rows.shift().map(x=>x.trim());
+ return rows.map(r=>Object.fromEntries(h.map((k,i)=>[k,(r[i]??"").trim()])));
+}
+const mk=(r,m,p)=>{const v=r[m+"_"+(p==="score"?"score_exact":p)+"_match"];return has(v)?+v:null};
+const pad=n=>String(n).padStart(2,"0");
+const lat=(r,m,p)=>num(r[m+"_"+p+"_lat_ms"]);
+const tot=(r,m)=>{const v=PRIMS.map(p=>lat(r,m,p[0]));return v.every(x=>x!==null)?v.reduce((a,b)=>a+b,0):null};
+const scoreOf=(r,m)=>{const v=PRIMS.map(p=>mk(r,m,p[0])).filter(x=>x!==null);return{s:v.filter(x=>x===1).length,n:v.length}};
+const disagree=r=>PRIMS.some(p=>mk(r,"G",p[0])!==mk(r,"Jev",p[0]));
+function box(r){try{const b=JSON.parse(r.Jev_box_coords);return Array.isArray(b)&&b.length===4&&b.every(x=>typeof x==="number")?b:null}catch(e){return null}}
+function ph(r){const s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><rect width="400" height="400" fill="#181521"/><text x="200" y="190" font-size="90" text-anchor="middle">🍂</text><text x="200" y="260" font-size="34" fill="#e8337a" text-anchor="middle" font-family="sans-serif" font-weight="700">#${pad(r.image_id)}</text><text x="200" y="298" font-size="16" fill="#9b93ab" text-anchor="middle" font-family="sans-serif">add to /images</text></svg>`;return"data:image/svg+xml,"+encodeURIComponent(s)}
+function setImg(el,r){
+ const fn=r.image_filename||"",alt=fn.replace(/\.[^.]+$/,e=>e.toLowerCase());
+ const tries=[fn,alt].filter((x,i,a)=>x&&a.indexOf(x)===i).map(x=>IMG_DIR+encodeURIComponent(x));let i=0;
+ el.onerror=()=>{i++;el.src=i<tries.length?tries[i]:ph(r);if(i>=tries.length)el.onerror=null};
+ el.src=tries.length?tries[0]:ph(r)}
+
+function dots(r){const d=m=>PRIMS.map(p=>{const v=mk(r,m,p[0]);return`<i class="${v===1?"i-ok":v===0?"i-bad":""}"></i>`}).join("");return`G ${d("G")}<span class="sep"></span>J ${d("Jev")}`}
+function buildGrid(){
+ const g=$("#grid");g.innerHTML="";
+ LIST.forEach(r=>{const b=BATCH[r.batch]||{l:"",c:"#fff"},t=document.createElement("button");
+  t.className="tile";t.setAttribute("aria-label","Open image "+r.image_id);
+  t.innerHTML=`<span class="tag" style="color:${b.c}">#${pad(r.image_id)} • ${b.l}</span><img loading="lazy" alt=""><div class="dots">${dots(r)}</div>`;
+  setImg(t.querySelector("img"),r);t.onclick=()=>openAt(LIST.indexOf(r));g.appendChild(t)})}
+function buildFilters(){
+ const cnt=k=>DATA.filter(r=>k==="all"||(k==="diff"?disagree(r):r.batch===k)).length;
+ const items=[["all","All","#e8337a"],["clean_leaf","Clean","#f5c030"],["ambiguous_noisy","Noisy","#f57c00"],["negative_distractor","Distractor","#b44fd0"],["diff","Models disagree","#4aa3ff"]];
+ $("#filters").innerHTML=items.map(([k,l,c])=>`<button class="fb ${FILTER===k?"on":""}" data-k="${k}"><i style="background:${c}"></i>${l} <span>${cnt(k)}</span></button>`).join("");
+ document.querySelectorAll(".fb").forEach(b=>b.onclick=()=>{FILTER=b.dataset.k;applyFilter()})}
+function applyFilter(){
+ LIST=DATA.filter(r=>FILTER==="all"||(FILTER==="diff"?disagree(r):r.batch===FILTER));
+ buildFilters();buildGrid()}
+
+function summary(r){
+ const G=scoreOf(r,"G"),J=scoreOf(r,"Jev"),jw=[],gw=[],both=[],miss=[],short=p=>p[1].split(" (")[0].split(" /")[0];
+ PRIMS.forEach(p=>{const g=mk(r,"G",p[0]),j=mk(r,"Jev",p[0]);if(g===null||j===null)return;(g&&j?both:!g&&!j?miss:j?jw:gw).push(short(p))});
+ let t=J.s>G.s?`<b>Jev led, ${J.s}/${J.n} vs ${G.s}/${G.n}.</b>`:G.s>J.s?`<b>Google led, ${G.s}/${G.n} vs ${J.s}/${J.n}.</b>`:`<b>Tie at ${G.s}/${G.n} each.</b>`;
+ if(jw.length)t+=` Only Jev got ${jw.join(" and ")} right.`;
+ if(gw.length)t+=` Only Google got ${gw.join(" and ")} right.`;
+ if(both.length)t+=` Both got ${both.join(", ")} right.`;
+ if(miss.length){t+=` Both missed ${miss.join(", ")}`;
+  if(miss.includes("Spatial Quadrant")&&r.G_spatial_pred===r.Jev_spatial_pred)t+=` (both said “${esc(r.G_spatial_pred)}”, truth is “${esc(r.true_spatial_quadrant)}”)`;t+="."}
+ const a=tot(r,"G"),b=tot(r,"Jev");
+ if(a&&b){const x=Math.max(a,b)/Math.min(a,b);t+=a===b?" Same total speed.":` ${b<a?"Jev":"Google"} was ${x.toFixed(1)}× faster (${f0(Math.min(a,b))} ms vs ${f0(Math.max(a,b))} ms).`}
+ return t}
+function cell(r,m,p){
+ const ok=mk(r,m,p),k=p==="score"?"score":p,c=num(r[m+"_"+k+"_conf"]);let sub=c!==null?`confidence ${Math.round(c*100)}%`:"";
+ if(p==="score"&&has(r[m+"_score_abs_error"]))sub+=(sub?" · ":"")+`off by ${esc(r[m+"_score_abs_error"])}`;
+ if(p==="spatial"&&m==="Jev"&&box(r))sub+=(sub?" · ":"")+`box [${box(r).join(", ")}]`;
+ const chip=ok===1?'<span class="chip ok">✓ correct</span>':ok===0?'<span class="chip bad">✗ wrong</span>':'<span class="chip na">no data</span>';
+ return`<div class="${m==="G"?"g":"j"}"><div class="m">${m==="G"?"Google":"Jev"}${chip}</div><div class="pred">${has(r[m+"_"+k+"_pred"])?esc(r[m+"_"+k+"_pred"]):"—"}</div><div class="sub">${sub}</div></div>`}
+function cost(r,m){const t=num(r[m+"_total_tokens"]),c=num(r[m+"_cost_usd"]);return{tok:t>0?f0(t):"not recorded",cost:(c>0||t>0)&&c!==null?"$"+c.toFixed(c>=0.01?4:6):"not recorded"}}
+function render(r){
+ const b=BATCH[r.batch]||{l:"",c:"#fff"},G=scoreOf(r,"G"),J=scoreOf(r,"Jev"),gt=tot(r,"G"),jt=tot(r,"Jev"),bx=box(r);
+ const all=PRIMS.flatMap(p=>[lat(r,"G",p[0]),lat(r,"Jev",p[0])]).filter(x=>x!==null),mx=Math.max(1,...all);
+ const card=(m,S,t,n)=>{const w=m==="G"?S.s>(J.s):S.s>G.s,c=cost(r,m==="G"?"G":"Jev");return`<div class="sc ${m==="G"?"g":"j"} ${w?"win":""}">${w?'<span class="crown">LEADS</span>':""}<h3>${n}</h3><div class="big">${S.s}<small> / ${S.n} correct</small></div><dl><dt>Total latency</dt><dd>${t!==null?f0(t)+" ms":"—"}</dd><dt>Tokens</dt><dd>${c.tok}</dd><dt>Cost</dt><dd>${c.cost}</dd></dl></div>`};
+ const bar=(v,col)=>v===null?`<div><span>—</span></div>`:`<div><i style="width:${v/mx*70}%;background:${col}"></i><span>${f0(v)} ms</span></div>`;
+ $("#sheet").innerHTML=`<div class="sh-head"><span class="badge" style="color:${b.c}">#${pad(r.image_id)} • ${b.l}</span><span class="fn">${esc(r.image_filename)}</span><div class="nav"><button id="pv" aria-label="Previous image">‹</button><button id="nx" aria-label="Next image">›</button></div><button class="x" id="x" aria-label="Close">✕</button></div>
+ <div class="body"><div><div class="photo"><img id="pimg" alt="">${bx?`<div class="box" id="bx" style="top:${bx[0]/10}%;left:${bx[1]/10}%;height:${(bx[2]-bx[0])/10}%;width:${(bx[3]-bx[1])/10}%"><span>Jev box</span></div>`:""}</div>
+ ${bx?'<label class="tog"><input type="checkbox" id="tg" checked> Show Jev’s bounding box</label>':""}
+ <div class="scout" style="margin-top:8px"><small>Scout note</small>${esc(r.scout_note)||"—"}</div></div>
+ <div><div class="score">${card("G",G,gt,"Google Decision 1")}${card("J",J,jt,"TypeSafe Jev")}</div>
+ <div class="sum">${summary(r)}</div>
+ <h4>Ground truth vs predictions</h4>
+ ${PRIMS.map(p=>`<div class="prim"><div class="ph"><b>${p[1]}</b><span>Truth: <em>${esc(r[p[2]])||"—"}</em></span></div><div class="pc">${cell(r,"G",p[0])}${cell(r,"Jev",p[0])}</div></div>`).join("")}
+ <h4>Speed per primitive</h4><div class="lat">${PRIMS.map(p=>`<div class="row"><span class="l">${p[0]}</span><div class="bars">${bar(lat(r,"G",p[0]),"var(--g)")}${bar(lat(r,"Jev",p[0]),"var(--j)")}</div></div>`).join("")}</div>
+ <div class="legend"><span><i style="background:var(--g)"></i>Google</span><span><i style="background:var(--j)"></i>Jev</span></div></div></div>`;
+ setImg($("#pimg"),r);
+ $("#x").onclick=closeM;$("#pv").onclick=()=>openAt(cur-1);$("#nx").onclick=()=>openAt(cur+1);
+ $("#pv").disabled=cur<=0;$("#nx").disabled=cur>=LIST.length-1;
+ const tg=$("#tg");if(tg)tg.onchange=e=>{$("#bx").style.display=e.target.checked?"":"none"}}
+function openAt(i){if(i<0||i>=LIST.length)return;cur=i;render(LIST[i]);$("#ov").classList.add("open");document.body.style.overflow="hidden";$("#sheet").scrollTop=0;history.replaceState(null,"","#img-"+LIST[i].image_id);$("#x").focus()}
+function closeM(){$("#ov").classList.remove("open");document.body.style.overflow="";history.replaceState(null,"",location.pathname+location.search)}
+function fromHash(){const m=/^#img-(\d+)$/.exec(location.hash);if(!m)return;let i=LIST.findIndex(r=>+r.image_id===+m[1]);if(i<0){FILTER="all";applyFilter();i=LIST.findIndex(r=>+r.image_id===+m[1])}openAt(i)}
+
+$("#ov").onclick=e=>{if(e.target.id==="ov")closeM()};
+document.addEventListener("keydown",e=>{if(!$("#ov").classList.contains("open"))return;if(e.key==="Escape")closeM();if(e.key==="ArrowLeft")openAt(cur-1);if(e.key==="ArrowRight")openAt(cur+1)});
+let sx=0,sy=0;
+$("#sheet").addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
+$("#sheet").addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>70&&Math.abs(dy)<40)openAt(cur+(dx<0?1:-1))},{passive:true});
+
+fetch(DATA_URL,{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error(r.status);return r.text()}).then(t=>{
+ DATA=parseCSV(t).filter(r=>has(r.image_id)).sort((a,b)=>+a.image_id-+b.image_id);
+ if(!DATA.length)throw new Error("empty");
+ const n=k=>DATA.filter(r=>r.batch===k).length;
+ $("#foot").innerHTML=Object.entries(BATCH).map(([k,b])=>`<i style="background:${b.c}"></i>${b.n} (n=${n(k)})`).join("")+"<br>Dots: G = Google Decision 1, J = TypeSafe Jev · order: Boolean, Class, Score, Spatial · green = correct, red = wrong";
+ LIST=DATA;buildFilters();buildGrid();fromHash();
+}).catch(e=>{$("#grid").outerHTML=`<div class="msg"><b>Couldn’t load data.csv</b><br><span class="sub">Make sure data.csv sits next to index.html and the page is opened from a web server (not by double-clicking the file). Error: ${esc(e.message)}</span></div>`});
+</script>
+</body>
+</html>

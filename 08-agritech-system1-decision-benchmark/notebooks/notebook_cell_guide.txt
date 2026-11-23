@@ -1,0 +1,13 @@
+Summary of Remaining Cells in the Cleaned Notebook
+
+Cell 1 — Project Overview & Setup Guide (Markdown)
+Explains the benchmark scope (comparing Google Gemini Decision-1 vs. TypeSafe Jev across Boolean, Choice, Score, and Spatial primitives on the 40-image AgriTech dataset), required Colab Secrets (GEMINI_API_KEY, OPENROUTER_API_KEY), directory structure, and execution order.
+
+Cell 2 — Environment Setup, Path Verification & API Key Check (Code)
+Installs dependencies (google-genai, openai, openpyxl, pillow), mounts Google Drive (if running in Colab), verifies that the Excel audit workbook and all 40 benchmark images exist in the target directory, and checks that API keys are loaded into Colab Secrets without printing any characters of the keys.
+
+Cell 3 — Core 4-Primitive Benchmark Runner (Code)
+Contains the complete end-to-end evaluation pipeline across a configurable image range (START_IMAGE to END_IMAGE). It encodes images, executes isolated calls for each of the four primitives (boolean, choice, score, spatial) against both models, computes accuracy/MAE/IoU metrics against ground truth, and checkpoints predictions and telemetry directly into the Master_Wide_40_Images and Long_160_Primitive_Runs sheets after every image.
+
+Cell 4 — Telemetry & Spatial Confidence Backfill Runner (Code)
+Provides the lightweight batch runner with multi-key/model fallback support (OPENROUTER_API_KEY_2 + OPENROUTER_API_KEY) and image resizing (max_side=512) to capture per-primitive latency, HTTP status, token consumption, estimated USD cost, and spatial confidence while preserving existing validated predictions (OVERWRITE_PREDICTIONS = False by default).

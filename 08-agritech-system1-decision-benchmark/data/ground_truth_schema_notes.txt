@@ -1,0 +1,20 @@
+image_filename: Exact filename matching your uploaded files, sorted cleanly by category (img_clean, img_neg, img_abg) and number.
+batch & batch_index: Category grouping (clean_leaf, negative_distractor, ambiguous_noisy) and the numerical index within that group.
+scout_note: Concise field-scout context note for each photo.
+true_boolean_pathology: Ground-truth boolean (true if fungal/pest pathology is present, false otherwise).
+true_choice_class: Ground-truth classification across the 5 target classes:
+healthy_normal_senescence
+fungal_or_pest_pathology
+drought_curled_high_fire_fuel
+nutrient_deficiency_chlorosis
+invalid_non_foliage (assigned to all 9 negative distractors)
+
+true_score_desiccation_1_to_4: Ground-truth desiccation/fuel-load severity score (1 = fresh/moist/non-foliage baseline to 4 = brittle/curled/high fire fuel).
+true_spatial_quadrant: Primary region of interest on the leaf (top, bottom, left, right, top_left, top_right, bottom_left, center, or none for non-foliage distractors).
+is_noisy: 0 for the 25 clean and 9 negative images; 1 for the 7 ambiguous/noisy images (motion blur, extreme macro zoom, overlapping leaf clutter, harsh lighting).
+==
+corrected: true_boolean_pathology
+Does the primary foliage specimen exhibit visible pathological symptoms (necrotic fungal spotting, mildew, pest damage/larvae) OR severe drought desiccation/browning requiring targeted post-harvest or fuel-mitigation intervention? (Answer FALSE for healthy/normal autumn senescence or non-foliage objects).
+
+
+prompt for spatial qudrant: primary region of interest (the main pathological lesion/damage area, or the center of the leaf if healthy, or 'none' if no foliage is present)

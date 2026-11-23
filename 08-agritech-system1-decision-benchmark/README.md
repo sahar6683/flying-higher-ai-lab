@@ -207,7 +207,7 @@ Open `http://localhost:8000`. Serve over HTTP; double-clicking `index.html` will
 ```text
 08-agritech-system1-decision-benchmark/
 ├── README.md
-├── assets/                                  # 18 descriptive benchmark/reference figures
+├── assets/                                  
 ├── audit/
 │   └── AgriTech_Decision_Audit_CLEAN.xlsx
 ├── data/

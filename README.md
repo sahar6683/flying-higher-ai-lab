@@ -48,6 +48,7 @@ Six rules govern every project in this lab:
 | 05 | [Intelligent Customer Operations (Multimodal RAG)](./05-intelligent-customer-ops-multimodal-rag) | n8n · Qdrant · OpenAI embeddings · OpenAI Vision (gpt-5-mini) · Gemini · Sheets · Data Tables | ✅ Live | End-to-end auditable multimodal RAG: photo inspection **before** policy eval, structured 4-bucket triage, full audit trail in Sheets + Data Tables. Companion Matryoshka benchmark (OpenAI vs EmbeddingGemma 2 at 768/512/256/128d) justifies the production `top-k=4, dimensions=768` choice. |
 | 06 | [Hybrid RAG Retrieval Benchmark](./06-hybrid-rag-retrieval-benchmark) | Python · BM25 · EmbeddingGemma 2 · BGE · OpenAI embeddings · RRF · Cross-encoders | ✅ Benchmark documented | 100-policy / 250-ticket retrieval stress test: lexical vs dense, hybrid fusion, MiniLM residual reranking, and BGE-Reranker-v2-m3 validation; best reported residual Recall@5 94.4%, Recall@10 94.8%. |
 | 07 | [VeriRoute AI — Stage 3 Confidence Routing](./veriroute-stage3-confidence-routing) | n8n · Qdrant Hybrid RRF · Jina Reranker · Llama 3.3 · Python | 🧪 Holdout + fault-injection package | Fail-closed 3-tier confidence routing with strict JSON verification, temporal checks, human copilot/escalation, 150-query audit and explicit reproducibility caveats. |
+| 08 | [AgriTech System-1 Decision Benchmark](./08-agritech-system1-decision-benchmark) | Python · Google Gemini Decision 1 · TypeSafe Jev · Colab · Excel audit | ✅ 40-image benchmark documented | 160 evaluations across Boolean, 5-class Choice, severity Score, and Spatial region matching; surfaces confident errors, image-quality sensitivity, latency, and cost. |
 ---
 ---
 
@@ -67,7 +68,7 @@ flying-higher-ai-lab/
 ├── 05-intelligent-customer-ops-multimodal-rag/
 └── 06-hybrid-rag-retrieval-benchmark/
 └── 07-veriroute-stage3-confidence-routing/
-
+└── 08-agritech-system1-decision-benchmark/
 ```
 
 ---
@@ -147,7 +148,10 @@ How I benchmarked 250 queries across Qdrant Hybrid RRF and Jina Reranker v2 to r
 
 - **<a href="https://flyinghigherai.substack.com/p/trying-to-break-my-own-rag-pipeline" target="_blank" rel="noopener noreferrer">11 — Trying to Break My Own RAG Pipeline: Fault Injection, Confidence Gating, and the 150-Query Holdout Test ↗</a>**  
 How I combined Qdrant, Jina Reranker v2, and a fail-closed 3-Tier Router with a Llama-3.3-70B Verifier to turn hybrid retrieval into a zero-hallucination production system.
- 
+
+ - **<a href="https://flyinghigherai.substack.com/p/beyond-accuracy-benchmarking-system" target="_blank" rel="noopener noreferrer">12 — Beyond Accuracy: Benchmarking System 1 AI (Jev vs. Gemini Decision 1) Across Four Decision Primitives ↗</a>**  
+A 40-image applied audit of Boolean pathology screening, five-class diagnosis, severity scoring, spatial region matching, confidence, image quality, latency, and cost.
+
 👉 **Subscribe & read the full publication:** **[flyinghigherai.substack.com](https://flyinghigherai.substack.com/)**
 ---
 ### Skills matrix

@@ -6,7 +6,10 @@
 
 The benchmark reports **58.1% composite exact-match accuracy for Jev** and **56.3% for Decision 1** (160 primitive evaluations per model). Jev led Boolean (85.0% vs. 82.5%) and Choice (67.5% vs. 55.0%), tied Spatial localization at 50.0%, and had lower desiccation-score MAE (0.875 vs. 0.900). Decision 1 had more exact Score matches (37.5% vs. 30.0%). Both systems produced highly confident errors and failed to localize the same half of the images.
 
-**Scope and caveat:** this is a small, field-gathered image set, not a production validation. The downloadable source package includes the 40-row ground truth and 40-row audit-site data, but not the 40 original leaf photographs referenced by the notebook and HTML. The interactive site therefore displays placeholders until those image files are supplied. No API credentials are included; notebook execution requires appropriately configured secrets and service access.
+**Scope and caveat:** this is a small, field-gathered image set, not a production validation. The downloadable source package includes the 40-row ground truth and 40-row audit-site data, plus the 10-image augmentation audit workbook and visual scoreboards in ./data_augmentation/, and the 40 original leaf photographs referenced by the notebook and HTML. The interactive site therefore displays placeholders until those image files are supplied. No API credentials are included; notebook execution requires appropriately configured secrets and service access.
+
+**Follow-up data augmentation stress test (`./data_augmentation`):** To test how well both models hold up when the same leaf is photographed under altered conditions, I ran an inference-time perturbation test on the first 10 leaves (rotations, crops, zoom, color filters, grayscale, noise, blur, and extreme brightness/contrast). Both models dropped in performance and flipped their rankings: Jev fell from **62.5% to 25.0%** composite accuracy (changing 24 of 40 answers) while Decision 1 fell from **57.5% to 47.5%** (changing 18 of 40 answers). More importantly, the errors were systematically biased—both models only missed disease (never raising a false alarm), only overestimated dryness (never underestimating), defaulted to `Center` on every edge-damaged leaf, and stayed highly confident while wrong.
+
 
 ## At a glance
 
@@ -190,7 +193,8 @@ The normalized ground-truth Choice classes are the five values listed above. Sou
 
 ## Interactive audit site
 
-The static audit viewer is in `agritech_audit_site/`. `index.html` loads `data.csv` and looks for photographs at `images/` using exact `image_filename` values. 
+The static audit viewer is in `agritech_audit_site/`. `index.html` loads `data.csv` and looks for photographs at `images/` using exact `image_filename` values.
+   
 ### Run locally
 
 From the project directory:
@@ -201,6 +205,22 @@ python3 -m http.server 8000
 ```
 
 Open `http://localhost:8000`. Serve over HTTP; double-clicking `index.html` will not load CSV data in browsers. Add original photos under `images/` to enable photo views; without those files, placeholders appear. For hosting, publish the contents of `agritech_audit_site/` together, preserving the `data.csv`, icon, and `images/` paths. `README.txt` retains the original page instructions.
+
+## Data augmentation stress test (10-leaf follow-up)
+
+Data augmentation stress test (10-leaf follow-up) `data-augmentation/`
+
+After publishing the initial 40-leaf benchmark, a reader challenged me on what happens when the images change—different lighting, angles, or distances. I ran an inference-time data augmentation stress test on the first 10 leaves (`#1`–`#10`) using rotations, zooms, crops, color filters, grayscale conversion, added noise, motion blur, and extreme brightness/contrast adjustments to see how both models hold up under perturbations that would not confuse a human observer.
+
+| Metric / Primitive | TypeSafe Jev (Original 10 → Augmented 10) | Google Decision 1 (Original 10 → Augmented 10) | Key Failure Pattern |
+|---|---|---|---|
+| **Composite accuracy (40 answers)** | **62.5% → 25.0%** (changed 24/40 answers) | **57.5% → 47.5%** (changed 18/40 answers) | Both slipped; Jev dropped sharply from leading to trailing. |
+| **Boolean** (`disease yes/no`) | **10/10 → 4/10** (6 missed infections) | **9/10 → 6/10** (4 missed infections) | One-sided errors: both missed disease, neither raised a false alarm. |
+| **Choice** (`primary pathology`) | **7/10 → 1/10** (called all 9 diseased leaves healthy) | **6/10 → 5/10** (called 5 of 9 diseased leaves healthy) | High uncalibrated confidence while wrong (85.6% Jev, 88.8% D1). |
+| **Score** (`dryness 1–4`) | **2/10 → 1/10** (MAE 1.2 → 1.9) | **2/10 → 4/10** (MAE 1.2 → 1.4) | Neither model ever underestimated dryness; both only overestimated (up to +3 points). |
+| **Spatial** (`damage region`) | **6/10 → 4/10** | **6/10 → 4/10** | On every leaf with edge damage (`#3`, `#4`, `#8`, `#9`), both models guessed `Center`. |
+
+📂 **Full sub-project & artifacts:** [`./data_augmentation/`](./data_augmentation/) — includes the first-person experiment write-up, the cleaned Colab runner (`AgriTech_Benchmark_data_augmentation.ipynb`), the cell-by-cell execution summary, the 10-image audit workbook (`AgriTech_Augmentation_10_Audit_LIGHT.xlsx`), and all 6 visual scoreboards.
 
 ## Repository map
 
@@ -216,16 +236,24 @@ Open `http://localhost:8000`. Serve over HTTP; double-clicking `index.html` will
 ├── notebooks/
 │   ├── AgriTech_Decision_Benchmark_Decision1_vs_Jev.ipynb
 │   └── notebook_cell_guide.txt
-└── agritech_audit_site/
-    ├── index.html
-    ├── data.csv
-    ├── README.txt
-    ├── favicon-32.png
-    ├── favicon.ico
-    ├── apple-touch-icon.png
-    └── images/
+├── agritech_audit_site/
+│   ├── index.html
+│   ├── data.csv
+│   ├── README.txt
+│   ├── favicon-32.png
+│   ├── favicon.ico
+│   ├── apple-touch-icon.png
+│   └── images/
+└── data_augmentation/
+    ├── README.md
+    ├── AgriTech_Augmentation_10_Audit_LIGHT.xlsx
+    └── AgriTech_Benchmark_data_augmentation.ipynb
+   
 ```
 
 ## Read the companion article
 
 **[Beyond Accuracy: Benchmarking System 1 AI (Jev vs. Gemini Decision 1) Across Four Decision Primitives ↗](https://flyinghigherai.substack.com/p/beyond-accuracy-benchmarking-system)** — *A 40-image real-world audit of pathology detection, root-cause classification, severity scoring, and spatial localization, and what happens when models are 99% confident and wrong.*
+
+**[Same Leaf, Different Verdict: Stress-Testing AI Decision Models with Data Augmentation ↗](https://flyinghigherai.substack.com/p/same-leaf-different-verdict-stress)** — *After rotations, crops, filters, and blur, both models got worse, and neither one’s confidence score warned me.*
+

@@ -4,7 +4,7 @@ I stress-tested the two decision models from my AgriTech benchmark by applying t
 
 > I treat these results as a directional audit of ten images, not as a production validation or a statistically conclusive estimate.
 
-## My setup and method
+## Setup and method
 
 I started from ten author-photographed leaf images and preserved the same four primitive tasks and ground truth: Boolean disease presence, Choice diagnosis, Score dryness from 1–4, and Spatial damage location. I evaluated Gemini Decision 1 and TypeSafe Jev on the transformed images, recorded replies and confidence in my audit workbook, and compared predictions with the original clean-image benchmark. My denominator is 40 answers per model (10 images × 4 primitives). The original 40-image benchmark had 160 answers per model.
 
@@ -25,7 +25,7 @@ I chose changes that did not make the leaves unrecognizable to a human observer.
 
 ![My ten augmented images](images/AgriTech_Data_Augmentation_Grid.png)
 
-## My results
+## Results
 
 ### Overall scoreboard
 
@@ -82,15 +82,15 @@ I found both models defaulted to “center” for all four leaves with edge dama
 
 ![My Spatial results](images/Augmentation_Spatial_Results.png)
 
-## My systematic-bias findings
+## Systematic-bias findings
 
 I did not see random, symmetric errors. In this ten-image audit, I observed four recurring directions: (1) both models missed disease and raised no false alarms; (2) both overestimated dryness and never underestimated it; (3) both selected “center” for each edge-damaged leaf; and (4) both could remain highly confident while wrong. I regard the confidence figures as model-reported scores, not calibrated probabilities or a dependable safety gate.
 
-## What I conclude
+## Conclusions
 
 I learned that clean-image performance did not predict robustness to these modest transformations. Jev took the larger overall hit in this sample; Decision 1 held up better overall, though it also lost ground and made confident diagnostic errors. I would stress-test the lighting, angles, crops, blur, and exposure that a deployment environment can produce before trusting either system in an agricultural workflow. I would also expand the dataset and repeat the experiment before drawing a general conclusion: my current ten-image audit is directional and too small to settle model reliability.
 
-## My notebook, audit data, and cell guide
+## Notebook, audit data, and cell guide
 
 - [Cleaned benchmark notebook](AgriTech_Benchmark_data_augmentation.ipynb)
 - [Audit workbook](AgriTech_Augmentation_10_Audit_LIGHT.xlsx) and [CSV export](AgriTech_Augmentation_10_Audit_LIGHT.csv)
@@ -98,7 +98,7 @@ I learned that clean-image performance did not predict robustness to these modes
 
 I retained the setup/verification cell, the full benchmark runner, and the missing-output backfill runner. I removed the failed duplicate execution, redundant setup fragments, and all stored outputs. I found no literal API credential in the notebook; I load keys at runtime from Colab Secrets. To rerun inference, I still need the ten original individual image files in the configured Drive folder; the image grid here is only a visual summary.
 
-## My figures
+## Figures
 
 - [Ten-image augmentation grid](images/AgriTech_Data_Augmentation_Grid.png)
 - [Overall scoreboard](images/Augmentation_Overall_Scoreboard.png)
